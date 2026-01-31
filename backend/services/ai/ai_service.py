@@ -1,0 +1,167 @@
+from abc import ABC, abstractmethod
+from typing import List, Optional
+from pydantic import BaseModel
+from enum import Enum
+
+
+class AnalysisType(str, Enum):
+    COMPLEXITY = "complexity"
+    HINTS = "hints"
+    OPTIMIZATION = "optimization"
+    DEBUGGING = "debugging"
+
+
+# Response Models
+class ComplexityAnalysis(BaseModel):
+    time_complexity: str
+    space_complexity: str
+    explanation: str
+    key_operations: List[str]
+    improvements: Optional[List[str]] = None
+
+
+class HintResponse(BaseModel):
+    hints: List[str]
+    progressive: bool
+    next_steps: List[str]
+
+
+class OptimizationSuggestion(BaseModel):
+    area: str
+    current_approach: str
+    suggested_approach: str
+    impact: str
+
+
+class OptimizationResponse(BaseModel):
+    current_complexity: str
+    optimized_complexity: str
+    suggestions: List[OptimizationSuggestion]
+    code_examples: Optional[List[str]] = None
+
+
+class Issue(BaseModel):
+    line: Optional[int]
+    description: str
+    severity: str
+
+
+class Fix(BaseModel):
+    issue: str
+    suggestion: str
+    code_example: Optional[str] = None
+
+
+class DebugResponse(BaseModel):
+    issues: List[Issue]
+    fixes: List[Fix]
+    test_cases: List[str]
+
+
+class CompletenessCheck(BaseModel):
+    is_complete: bool
+    missing_elements: List[str]
+    confidence: float
+
+
+# Abstract AI Service Interface
+class AIService(ABC):
+    """Abstract base class for AI service providers."""
+    
+    @abstractmethod
+    async def analyze_time_complexity(
+        self, 
+        problem_description: str, 
+        code: str, 
+        language: str
+    ) -> ComplexityAnalysis:
+        """
+        Analyze the time and space complexity of the given code.
+        
+        Args:
+            problem_description: The LeetCode problem description
+            code: The solution code to analyze
+            language: Programming language of the code
+            
+        Returns:
+            ComplexityAnalysis with time/space complexity and explanations
+        """
+        pass
+    
+    @abstractmethod
+    async def generate_hints(
+        self, 
+        problem_description: str, 
+        code: str, 
+        language: str
+    ) -> HintResponse:
+        """
+        Generate progressive hints for solving the problem.
+        
+        Args:
+            problem_description: The LeetCode problem description
+            code: The current solution attempt (may be incomplete)
+            language: Programming language of the code
+            
+        Returns:
+            HintResponse with progressive hints and next steps
+        """
+        pass
+    
+    @abstractmethod
+    async def optimize_solution(
+        self, 
+        problem_description: str, 
+        code: str, 
+        language: str
+    ) -> OptimizationResponse:
+        """
+        Suggest optimizations for the given solution.
+        
+        Args:
+            problem_description: The LeetCode problem description
+            code: The solution code to optimize
+            language: Programming language of the code
+            
+        Returns:
+            OptimizationResponse with suggestions and complexity improvements
+        """
+        pass
+    
+    @abstractmethod
+    async def debug_solution(
+        self, 
+        problem_description: str, 
+        code: str, 
+        language: str
+    ) -> DebugResponse:
+        """
+        Debug the solution and identify issues.
+        
+        Args:
+            problem_description: The LeetCode problem description
+            code: The solution code to debug
+            language: Programming language of the code
+            
+        Returns:
+            DebugResponse with identified issues and fixes
+        """
+        pass
+    
+    @abstractmethod
+    async def check_solution_completeness(
+        self, 
+        code: str, 
+        language: str
+    ) -> CompletenessCheck:
+        """
+        Check if the solution is complete.
+        
+        Args:
+            code: The solution code to check
+            language: Programming language of the code
+            
+        Returns:
+            CompletenessCheck indicating if solution is complete
+        """
+        pass
