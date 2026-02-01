@@ -344,6 +344,14 @@ export default function ResultsDisplay({
     const [revealedHints, setRevealedHints] = useState<Set<number>>(new Set([0])); // First hint revealed by default
     const [nextStepsRevealed, setNextStepsRevealed] = useState(false);
     
+    // Debug logging
+    console.log('Rendering hints:', {
+      hintsCount: hintResult.hints?.length,
+      hints: hintResult.hints,
+      progressive: hintResult.progressive,
+      nextSteps: hintResult.next_steps
+    });
+    
     const toggleHint = (index: number) => {
       setRevealedHints(prev => {
         const newSet = new Set(prev);

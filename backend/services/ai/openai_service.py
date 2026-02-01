@@ -44,19 +44,30 @@ class OpenAIService(AIService):
         Returns:
             Response content as string
         """
+        import logging
+        logger = logging.getLogger(__name__)
+        
         client = self._get_client()
         # GPT-5 models only support temperature=1
         if "gpt-5" in self.model:
             temperature = 1.0
         # Use max_completion_tokens for newer models (GPT-5+), max_tokens for older models
         token_param = "max_completion_tokens" if "gpt-5" in self.model or "gpt-4" in self.model else "max_tokens"
+        
+        logger.info(f"Calling OpenAI with model={self.model}, {token_param}=2000, temperature={temperature}")
+        
         response = client.chat.completions.create(
             model=self.model,
             messages=messages,
             temperature=temperature,
-            **{token_param: 1000}
+            **{token_param: 2000}
         )
-        return response.choices[0].message.content
+        
+        content = response.choices[0].message.content
+        logger.info(f"OpenAI response length: {len(content) if content else 0} characters")
+        logger.debug(f"OpenAI response preview: {content[:200] if content else 'None'}")
+        
+        return content
     
     def analyze_time_complexity(
         self, 
@@ -65,6 +76,9 @@ class OpenAIService(AIService):
         language: str
     ) -> ComplexityAnalysis:
         """Analyze time and space complexity using OpenAI."""
+        
+        import logging
+        logger = logging.getLogger(__name__)
         
         if problem_description:
             # Problem provided - standard analysis
@@ -116,6 +130,8 @@ Be specific about the complexity and explain your reasoning."""
         
         response = self._call_openai(messages, temperature=0.3)
         
+        logger.info(f"Raw OpenAI response for complexity analysis: {response[:500]}")
+        
         # Parse JSON response
         try:
             # Extract JSON from markdown code blocks if present
@@ -124,9 +140,14 @@ Be specific about the complexity and explain your reasoning."""
             elif "```" in response:
                 response = response.split("```")[1].split("```")[0].strip()
             
+            logger.info(f"Extracted JSON: {response[:500]}")
+            
             data = json.loads(response)
+            logger.info(f"Parsed data keys: {data.keys()}")
             return ComplexityAnalysis(**data)
         except (json.JSONDecodeError, KeyError) as e:
+            logger.error(f"Failed to parse OpenAI response: {e}")
+            logger.error(f"Response was: {response}")
             # Fallback if JSON parsing fails
             return ComplexityAnalysis(
                 time_complexity="O(n)",
@@ -144,6 +165,9 @@ Be specific about the complexity and explain your reasoning."""
         language: str
     ) -> HintResponse:
         """Generate progressive hints using OpenAI."""
+        
+        import logging
+        logger = logging.getLogger(__name__)
         
         if problem_description:
             prompt = f"""Generate progressive hints for solving this LeetCode problem. The user has written some code but needs guidance.
@@ -187,15 +211,23 @@ Start by mentioning what problem you think they're solving, then provide hints. 
         
         response = self._call_openai(messages, temperature=0.7)
         
+        logger.info(f"Raw OpenAI response for hints: {response[:500]}")
+        
         try:
             if "```json" in response:
                 response = response.split("```json")[1].split("```")[0].strip()
             elif "```" in response:
                 response = response.split("```")[1].split("```")[0].strip()
             
+            logger.info(f"Extracted JSON for hints: {response[:500]}")
+            
             data = json.loads(response)
+            logger.info(f"Parsed hints data keys: {data.keys()}")
+            logger.info(f"Number of hints: {len(data.get('hints', []))}")
             return HintResponse(**data)
-        except (json.JSONDecodeError, KeyError):
+        except (json.JSONDecodeError, KeyError) as e:
+            logger.error(f"Failed to parse hints response: {e}")
+            logger.error(f"Response was: {response}")
             return HintResponse(
                 hints=[response],
                 progressive=True,

@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: leetcode-analyzer-backend
+    runtime: python
+    buildCommand: "pip install -r backend/requirements.txt"
+    startCommand: "cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: AI_PROVIDER
+        sync: false  # Set manually in Render dashboard
+      - key: FALLBACK_PROVIDER
+        sync: false  # Set manually in Render dashboard
+      - key: CLAUDE_API_KEY
+        sync: false  # Set manually in Render dashboard - NEVER commit this
+      - key: CLAUDE_MODEL
+        value: claude-sonnet-4-5-20250929
+      - key: OPENAI_API_KEY
+        sync: false  # Set manually in Render dashboard - NEVER commit this
+      - key: OPENAI_MODEL
+        value: gpt-5-mini-2025-08-07
+      - key: DATABASE_URL
+        value: sqlite:///./leetcode_analysis.db
+      - key: HISTORY_RETENTION_DAYS
+        value: 7
+      - key: RATE_LIMIT_PER_MINUTE
+        value: 10
+    disk:
+      name: leetcode-db
+      mountPath: /opt/render/project/src/backend
+      sizeGB: 1

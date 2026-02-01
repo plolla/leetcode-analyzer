@@ -1,13 +1,13 @@
 # Python
 backend/venv/
-backend/__pycache__/
-backend/*.pyc
-backend/*.pyo
-backend/*.pyd
-backend/.Python
-backend/*.so
-backend/*.egg
-backend/*.egg-info/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
 backend/dist/
 backend/build/
 backend/.env

@@ -66,40 +66,53 @@ class AsyncOpenAIWrapper:
     
     def __init__(self, sync_service):
         self.sync_service = sync_service
+        self.executor = None
+    
+    def _get_executor(self):
+        """Get or create thread pool executor."""
+        if self.executor is None:
+            from concurrent.futures import ThreadPoolExecutor
+            self.executor = ThreadPoolExecutor(max_workers=5)
+        return self.executor
     
     async def analyze_time_complexity(self, problem_description: str, code: str, language: str):
         """Async wrapper for analyze_time_complexity."""
-        return await asyncio.to_thread(
-            self.sync_service.analyze_time_complexity,
-            problem_description, code, language
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            self._get_executor(),
+            lambda: self.sync_service.analyze_time_complexity(problem_description, code, language)
         )
     
     async def generate_hints(self, problem_description: str, code: str, language: str):
         """Async wrapper for generate_hints."""
-        return await asyncio.to_thread(
-            self.sync_service.generate_hints,
-            problem_description, code, language
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            self._get_executor(),
+            lambda: self.sync_service.generate_hints(problem_description, code, language)
         )
     
     async def optimize_solution(self, problem_description: str, code: str, language: str):
         """Async wrapper for optimize_solution."""
-        return await asyncio.to_thread(
-            self.sync_service.optimize_solution,
-            problem_description, code, language
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            self._get_executor(),
+            lambda: self.sync_service.optimize_solution(problem_description, code, language)
         )
     
     async def debug_solution(self, problem_description: str, code: str, language: str):
         """Async wrapper for debug_solution."""
-        return await asyncio.to_thread(
-            self.sync_service.debug_solution,
-            problem_description, code, language
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            self._get_executor(),
+            lambda: self.sync_service.debug_solution(problem_description, code, language)
         )
     
     async def check_solution_completeness(self, code: str, language: str):
         """Async wrapper for check_solution_completeness."""
-        return await asyncio.to_thread(
-            self.sync_service.check_solution_completeness,
-            code, language
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            self._get_executor(),
+            lambda: self.sync_service.check_solution_completeness(code, language)
         )
 
 
