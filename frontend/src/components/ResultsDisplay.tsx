@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Activity, Sparkles, Bug, Zap, FileText, Eye } from 'lucide-react';
+import MarkdownContent from './MarkdownContent';
 import type { 
   ComplexityAnalysisResult, 
   HintResult, 
@@ -375,7 +376,7 @@ export default function ResultsDisplay({
             {showExplanation && (hasExplanation || explanationData) && (
               <div className="mt-4 space-y-4 animate-fadeIn">
                 <div className="p-4 bg-white border border-slate-200 rounded-lg">
-                  <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">{displayExplanation}</p>
+                  <MarkdownContent content={displayExplanation} />
                 </div>
                 
                 {displayKeyOperations && displayKeyOperations.length > 0 && (
