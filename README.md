@@ -20,7 +20,7 @@ AI-powered analysis tool for LeetCode solutions to help software engineering can
 **Backend:**
 - Python FastAPI
 - SQLite for history storage
-- Free AI services (OpenAI/Hugging Face/Ollama)
+- AI services (OpenAI/Anthropic)
 
 ## Setup
 
