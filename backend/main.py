@@ -26,9 +26,10 @@ import os
 allowed_origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "https://leetcode-analyzer-nu.vercel.app",  # Production frontend
 ]
 
-# Add production frontend URL if configured
+# Add additional frontend URLs from environment if configured
 frontend_url = os.getenv("FRONTEND_URL")
 if frontend_url:
     allowed_origins.append(frontend_url)
