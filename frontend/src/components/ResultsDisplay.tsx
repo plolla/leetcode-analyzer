@@ -420,6 +420,19 @@ export default function ResultsDisplay({
       nextSteps: hintResult.next_steps
     });
     
+    // Check if hints exist and is an array
+    if (!hintResult.hints || !Array.isArray(hintResult.hints)) {
+      return (
+        <ResultWrapper>
+          <div className="space-y-4">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-red-700">No hints available. The response format may be incorrect.</p>
+            </div>
+          </div>
+        </ResultWrapper>
+      );
+    }
+    
     const toggleHint = (index: number) => {
       setRevealedHints(prev => {
         const newSet = new Set(prev);

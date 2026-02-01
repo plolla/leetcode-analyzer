@@ -299,6 +299,18 @@ function App() {
 
         const result = await response.json() as AnalysisResult;
         console.log('Analysis result:', result);
+        console.log('Analysis type:', selectedAnalysis);
+        
+        // Additional logging for hints
+        if (selectedAnalysis === 'hints') {
+          console.log('Hints result structure:', {
+            hasHints: 'hints' in result,
+            hintsValue: (result as any).hints,
+            hintsType: typeof (result as any).hints,
+            isArray: Array.isArray((result as any).hints),
+            fullResult: JSON.stringify(result, null, 2)
+          });
+        }
         
         // Cache the result in frontend
         if (problemSlug) {
