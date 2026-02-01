@@ -16,6 +16,10 @@ interface ResultsDisplayProps {
   loadingProgress?: number;
   estimatedTime?: number;
   loadingMessage?: string;
+  // Context for loading explanations on demand
+  currentCode?: string;
+  currentLanguage?: string;
+  currentProblemUrl?: string;
 }
 
 export default function ResultsDisplay({ 
@@ -24,8 +28,23 @@ export default function ResultsDisplay({
   loading, 
   error,
   loadingProgress = 0,
-  loadingMessage = 'Analyzing your solution...'
+  loadingMessage = 'Analyzing your solution...',
+  currentCode = '',
+  currentLanguage = 'python',
+  currentProblemUrl = ''
 }: ResultsDisplayProps) {
+  // State for complexity explanation (must be at top level for hooks)
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [loadingExplanation, setLoadingExplanation] = useState(false);
+  const [explanationData, setExplanationData] = useState<{
+    explanation: string;
+    key_operations: string[];
+    improvements?: string[];
+  } | null>(null);
+  
+  // State for hints progressive reveal
+  const [revealedHints, setRevealedHints] = useState<Set<number>>(new Set([0]));
+  const [nextStepsRevealed, setNextStepsRevealed] = useState(false);
   // Empty state when no analysis has been run
   if (!loading && !error && !result) {
     return (
@@ -247,7 +266,52 @@ export default function ResultsDisplay({
   // Render complexity analysis results
   if (analysisType === 'complexity') {
     const complexityResult = result as ComplexityAnalysisResult;
-    const [showExplanation, setShowExplanation] = useState(false);
+    
+    // Check if explanation is already loaded (from full analysis or previous load)
+    const hasExplanation = complexityResult.explanation && complexityResult.explanation.length > 0;
+    
+    const loadExplanation = async () => {
+      if (hasExplanation || explanationData) {
+        setShowExplanation(true);
+        return;
+      }
+      
+      setLoadingExplanation(true);
+      
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://leetcode-analyzer-xto0.onrender.com'}/api/explain-complexity`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            code: currentCode,
+            language: currentLanguage,
+            time_complexity: complexityResult.time_complexity,
+            space_complexity: complexityResult.space_complexity,
+            problem_url: currentProblemUrl || null,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to load explanation');
+        }
+
+        const explanationResult = await response.json();
+        setExplanationData(explanationResult);
+        setShowExplanation(true);
+      } catch (err) {
+        console.error('Failed to load explanation:', err);
+        alert('Failed to load explanation. Please try again.');
+      } finally {
+        setLoadingExplanation(false);
+      }
+    };
+    
+    // Use loaded explanation data or fallback to result data
+    const displayExplanation = explanationData?.explanation || complexityResult.explanation;
+    const displayKeyOperations = explanationData?.key_operations || complexityResult.key_operations;
+    const displayImprovements = explanationData?.improvements || complexityResult.improvements;
     
     return (
       <ResultWrapper>
@@ -285,46 +349,51 @@ export default function ResultsDisplay({
           {/* Collapsible Explanation Section */}
           <div className="border-t border-slate-200 pt-4">
             <button
-              onClick={() => setShowExplanation(!showExplanation)}
-              className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors group"
+              onClick={loadExplanation}
+              disabled={loadingExplanation}
+              className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors group disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span className="font-semibold text-slate-700 flex items-center gap-2">
                 <svg className="w-5 h-5 text-slate-600" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                 </svg>
-                {showExplanation ? 'Hide' : 'Show'} Detailed Explanation
+                {loadingExplanation ? 'Loading Explanation...' : showExplanation ? 'Hide' : 'Show'} Detailed Explanation
               </span>
-              <svg 
-                className={`w-5 h-5 text-slate-600 transition-transform ${showExplanation ? 'rotate-180' : ''}`} 
-                fill="currentColor" 
-                viewBox="0 0 20 20"
-              >
-                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
+              {loadingExplanation ? (
+                <div className="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-slate-600"></div>
+              ) : (
+                <svg 
+                  className={`w-5 h-5 text-slate-600 transition-transform ${showExplanation ? 'rotate-180' : ''}`} 
+                  fill="currentColor" 
+                  viewBox="0 0 20 20"
+                >
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              )}
             </button>
             
-            {showExplanation && (
+            {showExplanation && (hasExplanation || explanationData) && (
               <div className="mt-4 space-y-4 animate-fadeIn">
                 <div className="p-4 bg-white border border-slate-200 rounded-lg">
-                  <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">{complexityResult.explanation}</p>
+                  <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">{displayExplanation}</p>
                 </div>
                 
-                {complexityResult.key_operations && complexityResult.key_operations.length > 0 && (
+                {displayKeyOperations && displayKeyOperations.length > 0 && (
                   <div className="p-4 bg-white border border-slate-200 rounded-lg">
                     <p className="font-semibold text-slate-700 mb-2">Key Operations:</p>
                     <ul className="list-disc list-inside space-y-1">
-                      {complexityResult.key_operations.map((operation, index) => (
+                      {displayKeyOperations.map((operation, index) => (
                         <li key={index} className="text-slate-700">{operation}</li>
                       ))}
                     </ul>
                   </div>
                 )}
                 
-                {complexityResult.improvements && complexityResult.improvements.length > 0 && (
+                {displayImprovements && displayImprovements.length > 0 && (
                   <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
                     <p className="font-semibold text-amber-900 mb-2">Potential Improvements:</p>
                     <ul className="list-disc list-inside space-y-1">
-                      {complexityResult.improvements.map((improvement, index) => (
+                      {displayImprovements.map((improvement, index) => (
                         <li key={index} className="text-amber-800">{improvement}</li>
                       ))}
                     </ul>
@@ -341,8 +410,6 @@ export default function ResultsDisplay({
   // Render hint results
   if (analysisType === 'hints') {
     const hintResult = result as HintResult;
-    const [revealedHints, setRevealedHints] = useState<Set<number>>(new Set([0])); // First hint revealed by default
-    const [nextStepsRevealed, setNextStepsRevealed] = useState(false);
     
     // Debug logging
     console.log('Rendering hints:', {
@@ -395,7 +462,7 @@ export default function ResultsDisplay({
                       !isRevealed && !isFirst ? 'blur-md filter' : ''
                     }`}
                   >
-                    {hint.replace(/^[•\-]\s*/, '')}
+                    {hint.replace(/^[•-]\s*/, '')}
                   </p>
                   
                   {!isRevealed && !isFirst && (

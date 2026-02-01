@@ -53,6 +53,91 @@ function App() {
     setError(null);
   };
 
+  // Quick complexity analysis - two-stage approach for faster response
+  const handleComplexityAnalysisQuick = async () => {
+    setLoadingMessage('Analyzing complexity...');
+    setLoadingProgress(10);
+    
+    try {
+      console.log('Sending quick complexity request:', {
+        problem_url: problemUrl || null,
+        code: code.substring(0, 50) + '...',
+        language: language,
+      });
+
+      const response = await fetch(API_ENDPOINTS.analyzeComplexityQuick, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          problem_url: problemUrl || null,
+          code: code,
+          language: language,
+        }),
+      });
+
+      console.log('Quick complexity response status:', response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+        console.error('Quick complexity error response:', errorData);
+        
+        // Handle structured error responses
+        if (typeof errorData.detail === 'object') {
+          const detail = errorData.detail;
+          let errorMessage = detail.message || detail.error || 'Analysis failed';
+          
+          // Add validation errors if present
+          if (detail.validation_errors && detail.validation_errors.length > 0) {
+            errorMessage += '\n\nValidation errors:';
+            detail.validation_errors.forEach((err: { field: string; message: string; suggestion?: string }) => {
+              errorMessage += `\n• ${err.field}: ${err.message}`;
+              if (err.suggestion) {
+                errorMessage += `\n  Suggestion: ${err.suggestion}`;
+              }
+            });
+          }
+          
+          // Add suggestion if present
+          if (detail.suggestion && !detail.validation_errors) {
+            errorMessage += `\n\nSuggestion: ${detail.suggestion}`;
+          }
+          
+          throw new Error(errorMessage);
+        } else {
+          throw new Error(errorData.detail || 'Analysis failed');
+        }
+      }
+
+      const quickResult = await response.json();
+      console.log('Quick complexity result:', quickResult);
+      
+      setLoadingProgress(100);
+      setLoadingMessage('Complete!');
+      
+      // Set result with quick analysis and placeholder for explanation
+      setAnalysisResult({
+        time_complexity: quickResult.time_complexity,
+        space_complexity: quickResult.space_complexity,
+        explanation: '', // Will be loaded on demand
+        key_operations: [],
+        improvements: [],
+        inferred_problem: quickResult.inferred_problem,
+        inferred_problem_title: quickResult.inferred_problem_title,
+      });
+      
+      setLoading(false);
+    } catch (err) {
+      console.error('Quick complexity analysis error:', err);
+      const errorMessage = err instanceof Error ? err.message : 
+                          typeof err === 'string' ? err : 
+                          'Analysis failed. Please check the console for details.';
+      setError(errorMessage);
+      setLoading(false);
+    }
+  };
+
   const handleAnalyze = async () => {
     if (!canAnalyze || !selectedAnalysis) return;
 
@@ -61,9 +146,14 @@ function App() {
     setAnalysisResult(null);
     setLoadingProgress(0);
     
+    // For complexity analysis, use quick two-stage approach
+    if (selectedAnalysis === 'complexity') {
+      await handleComplexityAnalysisQuick();
+      return;
+    }
+    
     // Set estimated time based on analysis type (in seconds)
     const estimatedTimes: Record<string, number> = {
-      'complexity': 8,
       'hints': 10,
       'optimization': 12,
       'debugging': 10
@@ -648,6 +738,9 @@ function App() {
               loadingProgress={loadingProgress}
               estimatedTime={estimatedTime}
               loadingMessage={loadingMessage}
+              currentCode={code}
+              currentLanguage={language}
+              currentProblemUrl={problemUrl}
             />
           </div>
         </div>

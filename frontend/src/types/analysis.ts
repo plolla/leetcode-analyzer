@@ -12,6 +12,19 @@ export interface ComplexityAnalysisResult {
   inferred_problem_title?: string;  // Suggested problem title if identified
 }
 
+export interface QuickComplexityAnalysisResult {
+  time_complexity: string;
+  space_complexity: string;
+  inferred_problem?: string;
+  inferred_problem_title?: string;
+}
+
+export interface ComplexityExplanationResult {
+  explanation: string;
+  key_operations: string[];
+  improvements?: string[];
+}
+
 export interface HintResult {
   hints: string[];
   progressive: boolean;
