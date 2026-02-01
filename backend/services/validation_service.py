@@ -275,7 +275,7 @@ class ValidationService:
     
     def validate_analysis_request(
         self,
-        problem_url: str,
+        problem_url: Optional[str],  # Now optional
         code: str,
         language: str,
         analysis_type: str
@@ -284,7 +284,7 @@ class ValidationService:
         Validate complete analysis request.
         
         Args:
-            problem_url: LeetCode problem URL
+            problem_url: LeetCode problem URL (optional - can be None)
             code: Solution code
             language: Programming language
             analysis_type: Type of analysis
@@ -295,10 +295,11 @@ class ValidationService:
         all_errors = []
         all_warnings = []
         
-        # Validate each field
-        url_result = self.validate_problem_url(problem_url)
-        all_errors.extend(url_result.errors)
-        all_warnings.extend(url_result.warnings)
+        # Validate problem URL only if provided
+        if problem_url and problem_url.strip():
+            url_result = self.validate_problem_url(problem_url)
+            all_errors.extend(url_result.errors)
+            all_warnings.extend(url_result.warnings)
         
         code_result = self.validate_code(code, language)
         all_errors.extend(code_result.errors)

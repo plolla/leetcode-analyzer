@@ -18,6 +18,8 @@ class ComplexityAnalysis(BaseModel):
     explanation: str
     key_operations: List[str]
     improvements: Optional[List[str]] = None
+    inferred_problem: Optional[str] = None  # Present when no problem URL was provided
+    inferred_problem_title: Optional[str] = None  # Suggested problem title if identified
 
 
 class HintResponse(BaseModel):
@@ -64,6 +66,13 @@ class CompletenessCheck(BaseModel):
     confidence: float
 
 
+class ProblemInference(BaseModel):
+    inferred_problem: str
+    confidence: float
+    suggested_title: Optional[str] = None
+    reasoning: str
+
+
 # Abstract AI Service Interface
 class AIService(ABC):
     """Abstract base class for AI service providers."""
@@ -71,7 +80,7 @@ class AIService(ABC):
     @abstractmethod
     async def analyze_time_complexity(
         self, 
-        problem_description: str, 
+        problem_description: Optional[str], 
         code: str, 
         language: str
     ) -> ComplexityAnalysis:
@@ -79,7 +88,7 @@ class AIService(ABC):
         Analyze the time and space complexity of the given code.
         
         Args:
-            problem_description: The LeetCode problem description
+            problem_description: The LeetCode problem description (optional - will infer if None)
             code: The solution code to analyze
             language: Programming language of the code
             
@@ -91,7 +100,7 @@ class AIService(ABC):
     @abstractmethod
     async def generate_hints(
         self, 
-        problem_description: str, 
+        problem_description: Optional[str], 
         code: str, 
         language: str
     ) -> HintResponse:
@@ -99,7 +108,7 @@ class AIService(ABC):
         Generate progressive hints for solving the problem.
         
         Args:
-            problem_description: The LeetCode problem description
+            problem_description: The LeetCode problem description (optional - will infer if None)
             code: The current solution attempt (may be incomplete)
             language: Programming language of the code
             
@@ -111,7 +120,7 @@ class AIService(ABC):
     @abstractmethod
     async def optimize_solution(
         self, 
-        problem_description: str, 
+        problem_description: Optional[str], 
         code: str, 
         language: str
     ) -> OptimizationResponse:
@@ -119,7 +128,7 @@ class AIService(ABC):
         Suggest optimizations for the given solution.
         
         Args:
-            problem_description: The LeetCode problem description
+            problem_description: The LeetCode problem description (optional - will infer if None)
             code: The solution code to optimize
             language: Programming language of the code
             
@@ -131,7 +140,7 @@ class AIService(ABC):
     @abstractmethod
     async def debug_solution(
         self, 
-        problem_description: str, 
+        problem_description: Optional[str], 
         code: str, 
         language: str
     ) -> DebugResponse:
@@ -139,7 +148,7 @@ class AIService(ABC):
         Debug the solution and identify issues.
         
         Args:
-            problem_description: The LeetCode problem description
+            problem_description: The LeetCode problem description (optional - will infer if None)
             code: The solution code to debug
             language: Programming language of the code
             
@@ -163,5 +172,23 @@ class AIService(ABC):
             
         Returns:
             CompletenessCheck indicating if solution is complete
+        """
+        pass
+    
+    @abstractmethod
+    async def infer_problem_from_code(
+        self, 
+        code: str, 
+        language: str
+    ) -> ProblemInference:
+        """
+        Infer the LeetCode problem from the code structure and method names.
+        
+        Args:
+            code: The solution code to analyze
+            language: Programming language of the code
+            
+        Returns:
+            ProblemInference with inferred problem details
         """
         pass

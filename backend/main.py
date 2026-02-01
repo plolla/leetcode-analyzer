@@ -52,7 +52,7 @@ CACHE_DURATION = timedelta(hours=24)
 
 # Request Models
 class AnalysisRequest(BaseModel):
-    problem_url: str
+    problem_url: Optional[str] = None  # Now optional
     code: str
     language: str
     analysis_type: str  # 'complexity', 'hints', 'optimization', 'debugging'
@@ -481,8 +481,10 @@ async def analyze_code(request: AnalysisRequest):
     - Hints: Always allowed (helps complete incomplete solutions)
     - Complexity/Optimization/Debugging: Requires complete solution
     
+    Problem URL is now optional - if not provided, AI will infer the problem from code.
+    
     Args:
-        request: Analysis request with problem URL, code, language, and analysis type
+        request: Analysis request with optional problem URL, code, language, and analysis type
         
     Returns:
         Analysis result based on the requested type, or guidance message if incomplete
@@ -502,7 +504,7 @@ async def analyze_code(request: AnalysisRequest):
             }
         )
     
-    # Comprehensive input validation
+    # Comprehensive input validation (problem_url is now optional)
     validation_result = validation_service.validate_analysis_request(
         problem_url=request.problem_url,
         code=request.code,
@@ -528,48 +530,61 @@ async def analyze_code(request: AnalysisRequest):
         }
         raise HTTPException(status_code=400, detail=error_details)
     
-    # Extract problem slug from URL
-    slug = leetcode_parser.extract_problem_slug(request.problem_url)
-    if not slug:
-        raise HTTPException(
-            status_code=400,
-            detail={
-                "error": "Invalid problem URL",
-                "message": "Could not extract problem identifier from URL",
-                "suggestion": "Please use a valid LeetCode problem URL",
-                "examples": [
-                    "https://leetcode.com/problems/two-sum/",
-                    "https://leetcode.com/problems/reverse-linked-list/"
-                ]
-            }
+    # Handle problem details - either from URL or let AI infer during analysis
+    problem_description = None
+    slug = None
+    inferred_problem_info = None
+    
+    if request.problem_url:
+        # Extract problem slug from URL
+        slug = leetcode_parser.extract_problem_slug(request.problem_url)
+        if not slug:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "Invalid problem URL",
+                    "message": "Could not extract problem identifier from URL",
+                    "suggestion": "Please use a valid LeetCode problem URL",
+                    "examples": [
+                        "https://leetcode.com/problems/two-sum/",
+                        "https://leetcode.com/problems/reverse-linked-list/"
+                    ]
+                }
+            )
+        
+        # Get problem details
+        try:
+            problem = await get_problem_details(slug)
+            problem_description = f"{problem.title}: {problem.description}"
+        except HTTPException as e:
+            # Re-raise HTTP exceptions
+            raise
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail={
+                    "error": "Failed to fetch problem details",
+                    "message": "Could not retrieve problem information from LeetCode",
+                    "suggestion": "Please verify the problem URL and try again. If the issue persists, LeetCode may be temporarily unavailable.",
+                    "technical_details": str(e)
+                }
+            )
+    else:
+        # No URL provided - pass None to AI service, it will infer during analysis
+        # This saves an API call by doing inference and analysis in one go
+        problem_description = None
+        slug = "inferred-problem"
+        logger.info("No problem URL provided - AI will infer problem during analysis")
+    
+    # Check cache for existing analysis result (only if we have a real slug)
+    cached_result = None
+    if slug and slug not in ["inferred-problem", "unknown-problem"]:
+        cached_result = cache_service.get_analysis(
+            problem_slug=slug,
+            code=request.code,
+            language=request.language,
+            analysis_type=request.analysis_type
         )
-    
-    # Get problem details
-    try:
-        problem = await get_problem_details(slug)
-    except HTTPException as e:
-        # Re-raise HTTP exceptions
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail={
-                "error": "Failed to fetch problem details",
-                "message": "Could not retrieve problem information from LeetCode",
-                "suggestion": "Please verify the problem URL and try again. If the issue persists, LeetCode may be temporarily unavailable.",
-                "technical_details": str(e)
-            }
-        )
-    
-    problem_description = f"{problem.title}: {problem.description}"
-    
-    # Check cache for existing analysis result
-    cached_result = cache_service.get_analysis(
-        problem_slug=slug,
-        code=request.code,
-        language=request.language,
-        analysis_type=request.analysis_type
-    )
     
     if cached_result is not None:
         logger.info(f"Returning cached {request.analysis_type} analysis for {slug}")
