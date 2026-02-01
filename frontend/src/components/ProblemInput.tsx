@@ -108,55 +108,35 @@ export default function ProblemInput({ onUrlChange }: ProblemInputProps) {
               : 'border-gray-200 focus:ring-blue-100 bg-white hover:border-gray-300'
           }`}
         />
-        {url && validation.isValid && (
-          <div className="absolute right-4 top-1/2 -translate-y-1/2" aria-hidden="true">
-            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-            </div>
-          </div>
-        )}
+
       </div>
       
       {/* Validation feedback */}
       {validation.error && (
         <div id="url-error" className="mt-3 p-4 bg-red-50 border border-red-200 rounded-xl" role="alert" aria-live="polite">
-          <div className="flex items-start gap-3 mb-2">
-            <div className="flex-shrink-0 w-6 h-6 bg-red-500 rounded-lg flex items-center justify-center" aria-hidden="true">
-              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-red-700">{validation.error}</p>
-              {validation.suggestion && (
-                <p className="text-sm text-red-600 mt-1">{validation.suggestion}</p>
-              )}
-              {validation.examples && validation.examples.length > 0 && (
-                <div className="mt-2">
-                  <p className="text-xs font-semibold text-red-700 mb-1">Valid examples:</p>
-                  <ul className="text-xs text-red-600 space-y-1" role="list">
-                    {validation.examples.map((example, idx) => (
-                      <li key={idx} className="font-mono bg-red-100 px-2 py-1 rounded">
-                        {example}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
+          <div>
+            <p className="text-sm font-semibold text-red-700">{validation.error}</p>
+            {validation.suggestion && (
+              <p className="text-sm text-red-600 mt-1">{validation.suggestion}</p>
+            )}
+            {validation.examples && validation.examples.length > 0 && (
+              <div className="mt-2">
+                <p className="text-xs font-semibold text-red-700 mb-1">Valid examples:</p>
+                <ul className="text-xs text-red-600 space-y-1" role="list">
+                  {validation.examples.map((example, idx) => (
+                    <li key={idx} className="font-mono bg-red-100 px-2 py-1 rounded">
+                      {example}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </div>
       )}
       
       {validation.success && (
-        <div id="url-success" className="mt-3 flex items-start gap-3 p-4 bg-green-50 border border-green-200 rounded-xl" role="status" aria-live="polite">
-          <div className="flex-shrink-0 w-6 h-6 bg-green-500 rounded-lg flex items-center justify-center" aria-hidden="true">
-            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-            </svg>
-          </div>
+        <div id="url-success" className="mt-3 p-4 bg-green-50 border border-green-200 rounded-xl" role="status" aria-live="polite">
           <span className="text-sm text-green-700 font-medium leading-relaxed">{validation.success}</span>
         </div>
       )}

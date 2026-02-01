@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
-import ProblemInput from './components/ProblemInput'
-import CodeEditor from './components/CodeEditor'
-import AnalysisSelector from './components/AnalysisSelector'
+import { Code2, Link, Code, Activity, Sparkles, Bug, Zap, History, Keyboard } from 'lucide-react'
+import { Resizable } from 're-resizable'
+import Editor from '@monaco-editor/react'
 import ResultsDisplay from './components/ResultsDisplay'
 import HistoryPanel from './components/HistoryPanel'
 import KeyboardShortcutsHelp from './components/KeyboardShortcutsHelp'
@@ -12,9 +12,20 @@ import type { AnalysisResult } from './types/analysis'
 import { frontendCache } from './utils/cache'
 import './App.css'
 
+const LANGUAGES = [
+  { value: 'python', label: 'Python' },
+  { value: 'javascript', label: 'JavaScript' },
+  { value: 'typescript', label: 'TypeScript' },
+  { value: 'java', label: 'Java' },
+  { value: 'cpp', label: 'C++' },
+  { value: 'c', label: 'C' },
+  { value: 'csharp', label: 'C#' },
+  { value: 'go', label: 'Go' },
+  { value: 'rust', label: 'Rust' },
+];
+
 function App() {
   const [problemUrl, setProblemUrl] = useState('');
-  const [isUrlValid, setIsUrlValid] = useState(false);
   const [code, setCode] = useState('');
   const [language, setLanguage] = useState('python');
   const [selectedAnalysis, setSelectedAnalysis] = useState<AnalysisType | null>(null);
@@ -28,24 +39,15 @@ function App() {
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
 
   // Refs for focus management
-  const problemInputRef = useRef<HTMLDivElement>(null);
+  const problemInputRef = useRef<HTMLInputElement>(null);
   const codeEditorRef = useRef<HTMLDivElement>(null);
-  const analysisSelectorRef = useRef<HTMLDivElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
 
-  const handleUrlChange = (url: string, isValid: boolean) => {
-    setProblemUrl(url);
-    setIsUrlValid(isValid);
-  };
-
-  const handleCodeChange = (newCode: string, newLanguage: string) => {
-    setCode(newCode);
-    setLanguage(newLanguage);
-  };
+  // Validate LeetCode URL
+  const isUrlValid = /leetcode\.com\/problems\/[\w-]+/.test(problemUrl);
 
   const handleAnalysisSelect = (type: AnalysisType) => {
     setSelectedAnalysis(type);
-    // Clear previous results when changing analysis type
     setAnalysisResult(null);
     setError(null);
   };
@@ -261,35 +263,23 @@ function App() {
   };
 
   const handleHistoryEntrySelect = (entry: HistoryEntryData) => {
-    // Load the entry data into the form
     setProblemUrl(`https://leetcode.com/problems/${entry.problem_slug}/`);
-    setIsUrlValid(true);
     setCode(entry.code);
     setLanguage(entry.language);
     setSelectedAnalysis(entry.analysis_type as AnalysisType);
     setAnalysisResult(entry.result);
     setError(null);
-    
-    // Scroll to top to show the loaded data
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleRerunAnalysis = async (entry: HistoryEntryData) => {
-    // Load the entry data
     setProblemUrl(`https://leetcode.com/problems/${entry.problem_slug}/`);
-    setIsUrlValid(true);
     setCode(entry.code);
     setLanguage(entry.language);
     setSelectedAnalysis(entry.analysis_type as AnalysisType);
-    
-    // Clear previous results and trigger new analysis
     setAnalysisResult(null);
     setError(null);
-    
-    // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    
-    // Wait a bit for state to update, then run analysis
     setTimeout(() => {
       handleAnalyze();
     }, 100);
@@ -342,9 +332,7 @@ function App() {
       description: 'Focus problem input',
       category: 'Navigation',
       action: () => {
-        problemInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        const input = problemInputRef.current?.querySelector('input');
-        input?.focus();
+        problemInputRef.current?.focus();
       }
     },
     {
@@ -354,16 +342,6 @@ function App() {
       category: 'Navigation',
       action: () => {
         codeEditorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        // Monaco editor will handle focus internally
-      }
-    },
-    {
-      key: '3',
-      alt: true,
-      description: 'Focus analysis selector',
-      category: 'Navigation',
-      action: () => {
-        analysisSelectorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     },
     {
@@ -431,7 +409,7 @@ function App() {
   useKeyboardShortcuts({ shortcuts, enabled: !showShortcutsHelp });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Keyboard Shortcuts Help Overlay */}
       <KeyboardShortcutsHelp
         shortcuts={shortcuts}
@@ -439,32 +417,25 @@ function App() {
         onClose={() => setShowShortcutsHelp(false)}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="container mx-auto px-4 py-8 max-w-[1800px]">
         {/* Header */}
-        <header className="text-center mb-16">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl mb-6 shadow-lg" aria-hidden="true">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-            </svg>
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-3 mb-3">
+            <Code2 className="w-10 h-10 text-orange-500" />
+            <h1 className="text-4xl font-bold text-slate-800">LeetCode Analyzer</h1>
           </div>
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-indigo-900 bg-clip-text text-transparent mb-4">
-            LeetCode Analysis
-          </h1>
-          <p className="text-xl text-gray-600 font-medium">
+          <p className="text-slate-600 text-lg">
             AI-powered insights for your coding solutions
           </p>
           
-          {/* History Toggle Button */}
+          {/* Action Buttons */}
           <div className="mt-6 flex items-center justify-center gap-3">
             <button
               onClick={() => setShowHistory(!showHistory)}
               className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
               aria-label="Toggle history panel"
             >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
-              </svg>
+              <History className="w-5 h-5" />
               {showHistory ? 'Hide History' : 'View History'}
             </button>
             
@@ -474,13 +445,11 @@ function App() {
               aria-label="Show keyboard shortcuts"
               title="Keyboard shortcuts (Press ?)"
             >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H6zm1 2a1 1 0 000 2h6a1 1 0 100-2H7zm6 7a1 1 0 011 1v3a1 1 0 11-2 0v-3a1 1 0 011-1zm-3 3a1 1 0 100 2h.01a1 1 0 100-2H10zm-4 1a1 1 0 011-1h.01a1 1 0 110 2H7a1 1 0 01-1-1zm1-4a1 1 0 100 2h.01a1 1 0 100-2H7zm2 1a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zm4-4a1 1 0 100 2h.01a1 1 0 100-2H13zM9 9a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zM7 8a1 1 0 000 2h.01a1 1 0 000-2H7z" clipRule="evenodd" />
-              </svg>
+              <Keyboard className="w-5 h-5" />
               Shortcuts
             </button>
           </div>
-        </header>
+        </div>
 
         {/* History Panel */}
         {showHistory && (
@@ -492,80 +461,182 @@ function App() {
           </aside>
         )}
 
-        {/* Main Content */}
-        <main className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-100 p-8 mb-8">
-          <div className="space-y-10">
-            {/* Problem Input Section */}
-            <section ref={problemInputRef} aria-labelledby="problem-input-heading">
-              <div className="flex items-center gap-3 mb-5">
-                <div className="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-lg font-bold text-sm" aria-hidden="true">
-                  1
-                </div>
-                <h2 id="problem-input-heading" className="text-2xl font-bold text-gray-900">
-                  Enter Problem URL
-                </h2>
-              </div>
-              <ProblemInput onUrlChange={handleUrlChange} />
-            </section>
+        {/* Main Content - Split Pane Layout */}
+        <div className="flex gap-6 flex-col lg:flex-row">
+          {/* Left Panel - Input */}
+          <Resizable
+            defaultSize={{
+              width: '60%',
+              height: 'auto',
+            }}
+            minWidth="400px"
+            maxWidth="90%"
+            enable={{
+              top: false,
+              right: true,
+              bottom: false,
+              left: false,
+              topRight: false,
+              bottomRight: false,
+              bottomLeft: false,
+              topLeft: false,
+            }}
+            handleStyles={{
+              right: {
+                width: '8px',
+                right: '-4px',
+                cursor: 'col-resize',
+              },
+            }}
+            handleClasses={{
+              right: 'hover:bg-orange-400 transition-colors',
+            }}
+            className="flex-shrink-0"
+          >
+            <div className="bg-white rounded-xl shadow-lg p-6 h-fit">
+              <h2 className="text-2xl font-semibold text-slate-800 mb-4">Input</h2>
 
-            {/* Code Editor Section */}
-            <section className="pt-8 border-t border-gray-200" ref={codeEditorRef} aria-labelledby="code-editor-heading">
-              <div className="flex items-center gap-3 mb-5">
-                <div className="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-lg font-bold text-sm" aria-hidden="true">
-                  2
-                </div>
-                <h2 id="code-editor-heading" className="text-2xl font-bold text-gray-900">
-                  Paste Your Solution
-                </h2>
+              {/* LeetCode Link Input */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  <Link className="inline w-4 h-4 mr-1" />
+                  LeetCode Problem Link <span className="text-red-500">*</span>
+                </label>
+                <input
+                  ref={problemInputRef}
+                  type="text"
+                  value={problemUrl}
+                  onChange={(e) => setProblemUrl(e.target.value)}
+                  placeholder="https://leetcode.com/problems/..."
+                  required
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition"
+                />
               </div>
-              <CodeEditor onCodeChange={handleCodeChange} />
-            </section>
 
-            {/* Analysis Selector Section */}
-            <section className="pt-8 border-t border-gray-200" ref={analysisSelectorRef} aria-labelledby="analysis-selector-heading">
-              <div className="flex items-center gap-3 mb-5">
-                <div className="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-lg font-bold text-sm" aria-hidden="true">
-                  3
-                </div>
-                <h2 id="analysis-selector-heading" className="text-2xl font-bold text-gray-900">
-                  Choose Analysis Type
-                </h2>
-              </div>
-              <AnalysisSelector 
-                onAnalysisSelect={handleAnalysisSelect}
-                disabled={!canAnalyze}
-              />
-            </section>
-
-            {/* Analyze Button */}
-            {canAnalyze && selectedAnalysis && (
-              <section className="pt-8 border-t border-gray-200">
-                <button
-                  onClick={handleAnalyze}
-                  disabled={loading}
-                  aria-label={loading ? 'Analysis in progress' : 'Run analysis (Ctrl+Enter)'}
-                  className="w-full py-5 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:transform-none text-lg focus:outline-none focus:ring-4 focus:ring-blue-100"
+              {/* Language Selector */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  <Code className="inline w-4 h-4 mr-1" />
+                  Programming Language
+                </label>
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition bg-white cursor-pointer"
                 >
-                  {loading ? (
-                    <span className="flex items-center justify-center gap-3">
-                      <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Analyzing...
-                    </span>
-                  ) : (
-                    'Analyze Solution'
-                  )}
-                </button>
-              </section>
-            )}
-          </div>
-        </main>
+                  {LANGUAGES.map((lang) => (
+                    <option key={lang.value} value={lang.value}>
+                      {lang.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-        {/* Results Section */}
-        {(analysisResult || loading || error) && (
-          <div ref={resultsRef}>
+              {/* Code Input */}
+              <div className="mb-6" ref={codeEditorRef}>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Your Code <span className="text-red-500">*</span>
+                </label>
+                <div className="border border-slate-300 rounded-lg overflow-hidden" style={{ height: '400px' }}>
+                  <Editor
+                    height="100%"
+                    language={language}
+                    value={code}
+                    onChange={(value) => setCode(value || '')}
+                    theme="vs-light"
+                    options={{
+                      minimap: { enabled: false },
+                      fontSize: 14,
+                      lineNumbers: 'on',
+                      scrollBeyondLastLine: false,
+                      automaticLayout: true,
+                      tabSize: 2,
+                      wordWrap: 'on',
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Analysis Options */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-medium text-slate-700 mb-2">Analysis Options</h3>
+                
+                <button
+                  onClick={() => {
+                    handleAnalysisSelect('complexity');
+                    if (canAnalyze) handleAnalyze();
+                  }}
+                  disabled={!canAnalyze || loading}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition shadow-md ${
+                    selectedAnalysis === 'complexity'
+                      ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white'
+                      : 'bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  <Activity className="w-5 h-5" />
+                  <span className="font-medium">Analyze Time Complexity</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    handleAnalysisSelect('hints');
+                    if (canAnalyze) handleAnalyze();
+                  }}
+                  disabled={!canAnalyze || loading}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition shadow-md ${
+                    selectedAnalysis === 'hints'
+                      ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white'
+                      : 'bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  <Sparkles className="w-5 h-5" />
+                  <span className="font-medium">Get Hints</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    handleAnalysisSelect('debugging');
+                    if (canAnalyze) handleAnalyze();
+                  }}
+                  disabled={!canAnalyze || loading}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition shadow-md ${
+                    selectedAnalysis === 'debugging'
+                      ? 'bg-gradient-to-r from-red-600 to-red-700 text-white'
+                      : 'bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  <Bug className="w-5 h-5" />
+                  <span className="font-medium">Debug</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    handleAnalysisSelect('optimization');
+                    if (canAnalyze) handleAnalyze();
+                  }}
+                  disabled={!canAnalyze || loading}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition shadow-md ${
+                    selectedAnalysis === 'optimization'
+                      ? 'bg-gradient-to-r from-green-600 to-green-700 text-white'
+                      : 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  <Zap className="w-5 h-5" />
+                  <span className="font-medium">Optimize</span>
+                </button>
+              </div>
+
+              {loading && (
+                <div className="mt-4 text-center text-slate-600">
+                  <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500"></div>
+                  <p className="mt-2 text-sm">{loadingMessage || 'Analyzing your code...'}</p>
+                </div>
+              )}
+            </div>
+          </Resizable>
+
+          {/* Right Panel - Results */}
+          <div className="flex-1 min-w-0" ref={resultsRef}>
             <ResultsDisplay
               result={analysisResult}
               analysisType={selectedAnalysis || ''}
@@ -576,22 +647,7 @@ function App() {
               loadingMessage={loadingMessage}
             />
           </div>
-        )}
-
-        {/* Debug Info (remove in production) */}
-        {import.meta.env.DEV && (
-          <div className="mt-6 p-5 bg-gray-900 text-gray-300 rounded-xl text-sm font-mono shadow-lg">
-            <p className="text-gray-400 font-bold mb-2">Debug Info:</p>
-            <div className="space-y-1">
-              <p><span className="text-blue-400">URL:</span> {problemUrl || '(empty)'}</p>
-              <p><span className="text-blue-400">Valid:</span> {isUrlValid ? '✓ Yes' : '✗ No'}</p>
-              <p><span className="text-blue-400">Code:</span> {code.length} characters</p>
-              <p><span className="text-blue-400">Language:</span> {language}</p>
-              <p><span className="text-blue-400">Can Analyze:</span> {canAnalyze ? '✓ Yes' : '✗ No'}</p>
-              <p><span className="text-blue-400">Selected:</span> {selectedAnalysis || 'None'}</p>
-            </div>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   )

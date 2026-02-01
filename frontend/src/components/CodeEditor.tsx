@@ -77,20 +77,15 @@ export default function CodeEditor({ onCodeChange }: CodeEditorProps) {
       </div>
 
       {/* Code Stats */}
-      <div className="mt-3 flex items-center gap-8 text-sm" role="status" aria-live="polite" aria-atomic="true">
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-blue-500 rounded-full" aria-hidden="true"></div>
+      <div className="mt-3 flex items-center gap-6 text-sm" role="status" aria-live="polite" aria-atomic="true">
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-lg border border-blue-100">
           <span className="text-gray-600 font-medium">Lines: <span className="text-gray-900">{code.split('\n').length}</span></span>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-indigo-500 rounded-full" aria-hidden="true"></div>
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 rounded-lg border border-indigo-100">
           <span className="text-gray-600 font-medium">Characters: <span className="text-gray-900">{code.length}</span></span>
         </div>
         {!code && (
-          <span className="text-gray-400 ml-auto flex items-center gap-2">
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-              <path fillRule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
+          <span className="text-gray-400 ml-auto">
             Paste your solution code here
           </span>
         )}

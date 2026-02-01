@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { Activity, Sparkles, Bug, Zap, FileText, Eye } from 'lucide-react';
 import type { 
   ComplexityAnalysisResult, 
   HintResult, 
@@ -22,115 +24,91 @@ export default function ResultsDisplay({
   loading, 
   error,
   loadingProgress = 0,
-  estimatedTime = 10,
   loadingMessage = 'Analyzing your solution...'
 }: ResultsDisplayProps) {
-  if (loading) {
-    const remainingTime = Math.max(0, Math.ceil(estimatedTime * (1 - loadingProgress / 100)));
-    
+  // Empty state when no analysis has been run
+  if (!loading && !error && !result) {
     return (
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-100 p-12" role="status" aria-live="polite" aria-label="Analysis in progress">
-        <div className="flex flex-col items-center justify-center space-y-6">
-          {/* Animated spinner */}
-          <div className="relative" aria-hidden="true">
-            <div className="animate-spin rounded-full h-20 w-20 border-4 border-blue-200"></div>
-            <div className="animate-spin rounded-full h-20 w-20 border-t-4 border-blue-600 absolute top-0"></div>
-            {/* Progress percentage in center */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-sm font-bold text-blue-600">{Math.round(loadingProgress)}%</span>
-            </div>
-          </div>
-          
-          {/* Loading message */}
-          <span className="text-gray-700 font-medium text-lg">{loadingMessage}</span>
-          
-          {/* Progress bar */}
-          <div className="w-full max-w-md">
-            <div className="h-3 bg-gray-200 rounded-full overflow-hidden" role="progressbar" aria-valuenow={Math.round(loadingProgress)} aria-valuemin={0} aria-valuemax={100} aria-label="Analysis progress">
-              <div 
-                className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-300 ease-out rounded-full"
-                style={{ width: `${loadingProgress}%` }}
-              ></div>
-            </div>
-          </div>
-          
-          {/* Estimated time */}
-          {remainingTime > 0 && (
-            <span className="text-gray-500 text-sm">
-              Estimated time remaining: {remainingTime}s
-            </span>
-          )}
-          
-          {/* Tips while waiting */}
-          <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-200 max-w-md">
-            <div className="flex items-start gap-3">
-              <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-              </svg>
-              <p className="text-sm text-blue-800">
-                {loadingProgress < 30 && "Our AI is reading your code and understanding the problem context..."}
-                {loadingProgress >= 30 && loadingProgress < 60 && "Analyzing patterns and identifying key insights..."}
-                {loadingProgress >= 60 && "Almost done! Formatting the results for you..."}
-              </p>
-            </div>
-          </div>
+      <div className="bg-white rounded-xl shadow-lg p-6 h-fit lg:sticky lg:top-8">
+        <div className="flex flex-col items-center justify-center text-center py-12">
+          <FileText className="w-16 h-16 text-slate-300 mb-4" />
+          <h3 className="text-xl font-medium text-slate-400 mb-2">No Analysis Yet</h3>
+          <p className="text-slate-500 text-sm max-w-sm">
+            Enter your code and select an analysis option to get started
+          </p>
         </div>
       </div>
     );
   }
 
-  if (error) {
-    // Parse error message for structured display
-    const errorLines = error.split('\n');
-    const mainError = errorLines[0];
-    const details = errorLines.slice(1);
-    
+  // Get icon and title based on analysis type
+  const getIcon = () => {
+    switch (analysisType) {
+      case 'complexity':
+        return <Activity className="w-6 h-6 text-blue-500" />;
+      case 'hints':
+        return <Sparkles className="w-6 h-6 text-purple-500" />;
+      case 'debugging':
+        return <Bug className="w-6 h-6 text-red-500" />;
+      case 'optimization':
+        return <Zap className="w-6 h-6 text-green-500" />;
+      default:
+        return <FileText className="w-6 h-6 text-slate-500" />;
+    }
+  };
+
+  const getTitle = () => {
+    switch (analysisType) {
+      case 'complexity':
+        return 'Time Complexity Analysis';
+      case 'hints':
+        return 'Hints';
+      case 'debugging':
+        return 'Debug Analysis';
+      case 'optimization':
+        return 'Optimization Suggestions';
+      default:
+        return 'Analysis Result';
+    }
+  };
+
+  const getBgColor = () => {
+    switch (analysisType) {
+      case 'complexity':
+        return 'bg-blue-50 border-blue-200';
+      case 'hints':
+        return 'bg-purple-50 border-purple-200';
+      case 'debugging':
+        return 'bg-red-50 border-red-200';
+      case 'optimization':
+        return 'bg-green-50 border-green-200';
+      default:
+        return 'bg-slate-50 border-slate-200';
+    }
+  };
+  if (loading) {
     return (
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-red-200 p-8">
-        <div className="flex items-start gap-4">
-          <div className="flex-shrink-0 w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
-            <svg className="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-            </svg>
-          </div>
-          <div className="flex-1">
-            <h3 className="text-xl font-bold text-red-900 mb-2">Analysis Failed</h3>
-            <p className="text-red-700 leading-relaxed font-semibold mb-3">{mainError}</p>
-            
-            {details.length > 0 && (
-              <div className="mt-4 p-4 bg-red-50 rounded-xl border border-red-200">
-                <div className="space-y-2">
-                  {details.map((detail, idx) => {
-                    const trimmed = detail.trim();
-                    if (!trimmed) return null;
-                    
-                    // Check if this is a section header
-                    if (trimmed.endsWith(':')) {
-                      return (
-                        <p key={idx} className="text-sm font-bold text-red-800 mt-3 first:mt-0">
-                          {trimmed}
-                        </p>
-                      );
-                    }
-                    
-                    // Check if this is a bullet point
-                    if (trimmed.startsWith('•')) {
-                      return (
-                        <div key={idx} className="flex items-start gap-2 ml-2">
-                          <span className="text-red-600 font-bold">•</span>
-                          <p className="text-sm text-red-700 flex-1">{trimmed.substring(1).trim()}</p>
-                        </div>
-                      );
-                    }
-                    
-                    // Regular detail line
-                    return (
-                      <p key={idx} className="text-sm text-red-700 ml-2">
-                        {trimmed}
-                      </p>
-                    );
-                  })}
+      <div className="bg-white rounded-xl shadow-lg p-6 h-fit lg:sticky lg:top-8">
+        <div className="flex items-center gap-3 mb-4">
+          {getIcon()}
+          <h2 className="text-2xl font-semibold text-slate-800">{getTitle()}</h2>
+        </div>
+        
+        <div className={`${getBgColor()} border rounded-lg p-6`}>
+          <div className="flex flex-col items-center justify-center space-y-4">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+            <p className="text-slate-700 font-medium">{loadingMessage}</p>
+            {loadingProgress > 0 && (
+              <div className="w-full">
+                <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-orange-500 transition-all duration-300"
+                    style={{ width: `${loadingProgress}%` }}
+                  ></div>
                 </div>
+                <p className="text-sm text-slate-600 mt-2 text-center">
+                  {Math.round(loadingProgress)}%
+                </p>
               </div>
             )}
           </div>
@@ -139,9 +117,68 @@ export default function ResultsDisplay({
     );
   }
 
+  if (error) {
+    const errorLines = error.split('\n');
+    const mainError = errorLines[0];
+    const details = errorLines.slice(1).filter(line => line.trim());
+    
+    return (
+      <div className="bg-white rounded-xl shadow-lg p-6 h-fit lg:sticky lg:top-8">
+        <div className="flex items-center gap-3 mb-4">
+          <Bug className="w-6 h-6 text-red-500" />
+          <h2 className="text-2xl font-semibold text-slate-800">Error</h2>
+        </div>
+        
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+          <p className="text-red-700 font-semibold mb-3">{mainError}</p>
+          
+          {details.length > 0 && (
+            <div className="mt-4 space-y-2">
+              {details.map((detail, idx) => {
+                const trimmed = detail.trim();
+                if (!trimmed) return null;
+                
+                if (trimmed.startsWith('•')) {
+                  return (
+                    <div key={idx} className="flex items-start gap-2">
+                      <span className="text-red-600">•</span>
+                      <p className="text-sm text-red-600">{trimmed.substring(1).trim()}</p>
+                    </div>
+                  );
+                }
+                
+                return (
+                  <p key={idx} className="text-sm text-red-600">
+                    {trimmed}
+                  </p>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   if (!result) {
     return null;
   }
+
+  // Wrapper for all result types with Figma-style design
+  const ResultWrapper = ({ children }: { children: React.ReactNode }) => (
+    <div className="bg-white rounded-xl shadow-lg p-6 h-fit lg:sticky lg:top-8">
+      <div className="flex items-center gap-3 mb-4">
+        {getIcon()}
+        <h2 className="text-2xl font-semibold text-slate-800">{getTitle()}</h2>
+      </div>
+
+      <div className={`${getBgColor()} border rounded-lg p-6`}>
+        <div className="prose prose-slate max-w-none">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
 
   // Check if this is an incomplete solution response
   if ('incomplete_solution' in result && result.incomplete_solution) {
@@ -209,179 +246,147 @@ export default function ResultsDisplay({
 
   // Render complexity analysis results
   if (analysisType === 'complexity') {
+    const complexityResult = result as ComplexityAnalysisResult;
     return (
-      <article className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-100 p-8" aria-labelledby="complexity-heading">
-        <header className="flex items-center gap-3 mb-8">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center" aria-hidden="true">
-            <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clipRule="evenodd" />
-            </svg>
+      <ResultWrapper>
+        <div className="space-y-4">
+          <div>
+            <p className="text-sm font-semibold text-slate-600 mb-1">Time Complexity</p>
+            <p className="text-3xl font-bold text-blue-600">{complexityResult.time_complexity}</p>
           </div>
-          <h2 id="complexity-heading" className="text-3xl font-bold text-gray-900">
-            Complexity Analysis
-          </h2>
-        </header>
-
-        {/* Complexity Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8" role="region" aria-label="Complexity summary">
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-2xl p-6 transform transition-transform hover:scale-105">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center" aria-hidden="true">
-                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-bold text-blue-900">Time Complexity</h3>
+          
+          <div>
+            <p className="text-sm font-semibold text-slate-600 mb-1">Space Complexity</p>
+            <p className="text-3xl font-bold text-emerald-600">{complexityResult.space_complexity}</p>
+          </div>
+          
+          <div className="pt-4 border-t border-slate-200">
+            <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">{complexityResult.explanation}</p>
+          </div>
+          
+          {complexityResult.key_operations && complexityResult.key_operations.length > 0 && (
+            <div className="pt-4">
+              <p className="font-semibold text-slate-700 mb-2">Key Operations:</p>
+              <ul className="list-disc list-inside space-y-1">
+                {complexityResult.key_operations.map((operation, index) => (
+                  <li key={index} className="text-slate-700">{operation}</li>
+                ))}
+              </ul>
             </div>
-            <p className="text-4xl font-black text-blue-700" aria-label={`Time complexity is ${(result as ComplexityAnalysisResult).time_complexity}`}>{(result as ComplexityAnalysisResult).time_complexity}</p>
-          </div>
-
-          <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-2 border-emerald-200 rounded-2xl p-6 transform transition-transform hover:scale-105">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center" aria-hidden="true">
-                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M3 12v3c0 1.657 3.134 3 7 3s7-1.343 7-3v-3c0 1.657-3.134 3-7 3s-7-1.343-7-3z" />
-                  <path d="M3 7v3c0 1.657 3.134 3 7 3s7-1.343 7-3V7c0 1.657-3.134 3-7 3S3 8.657 3 7z" />
-                  <path d="M17 5c0 1.657-3.134 3-7 3S3 6.657 3 5s3.134-3 7-3 7 1.343 7 3z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-bold text-emerald-900">Space Complexity</h3>
+          )}
+          
+          {complexityResult.improvements && complexityResult.improvements.length > 0 && (
+            <div className="pt-4">
+              <p className="font-semibold text-slate-700 mb-2">Potential Improvements:</p>
+              <ul className="list-disc list-inside space-y-1">
+                {complexityResult.improvements.map((improvement, index) => (
+                  <li key={index} className="text-slate-700">{improvement}</li>
+                ))}
+              </ul>
             </div>
-            <p className="text-4xl font-black text-emerald-700" aria-label={`Space complexity is ${(result as ComplexityAnalysisResult).space_complexity}`}>{(result as ComplexityAnalysisResult).space_complexity}</p>
-          </div>
+          )}
         </div>
-
-        {/* Explanation */}
-        <div className="mb-8 p-6 bg-gray-50 rounded-2xl border border-gray-200">
-          <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <svg className="w-6 h-6 text-gray-700" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-            </svg>
-            Explanation
-          </h3>
-          <p className="text-gray-700 leading-relaxed text-base">{(result as ComplexityAnalysisResult).explanation}</p>
-        </div>
-
-        {/* Key Operations */}
-        {(result as ComplexityAnalysisResult).key_operations && (result as ComplexityAnalysisResult).key_operations.length > 0 && (
-          <div className="mb-8 p-6 bg-indigo-50 rounded-2xl border border-indigo-200">
-            <h3 className="text-xl font-bold text-indigo-900 mb-4 flex items-center gap-2">
-              <svg className="w-6 h-6 text-indigo-700" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-              </svg>
-              Key Operations
-            </h3>
-            <ul className="space-y-3">
-              {(result as ComplexityAnalysisResult).key_operations.map((operation, index) => (
-                <li key={index} className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-6 h-6 bg-indigo-500 rounded-lg flex items-center justify-center mt-0.5">
-                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <span className="text-gray-800 leading-relaxed flex-1">{operation}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Improvements */}
-        {(result as ComplexityAnalysisResult).improvements && (result as ComplexityAnalysisResult).improvements!.length > 0 && (
-          <div className="p-6 bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-300 rounded-2xl">
-            <h3 className="text-xl font-bold text-amber-900 mb-4 flex items-center gap-2">
-              <svg className="w-6 h-6 text-amber-700" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-              </svg>
-              Potential Improvements
-            </h3>
-            <ul className="space-y-3">
-              {(result as ComplexityAnalysisResult).improvements!.map((improvement, index) => (
-                <li key={index} className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-6 h-6 bg-amber-500 rounded-lg flex items-center justify-center mt-0.5">
-                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <span className="text-amber-900 leading-relaxed flex-1 font-medium">{improvement}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </article>
+      </ResultWrapper>
     );
   }
 
   // Render hint results
   if (analysisType === 'hints') {
     const hintResult = result as HintResult;
+    const [revealedHints, setRevealedHints] = useState<Set<number>>(new Set([0])); // First hint revealed by default
+    const [nextStepsRevealed, setNextStepsRevealed] = useState(false);
+    
+    const toggleHint = (index: number) => {
+      setRevealedHints(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(index)) {
+          newSet.delete(index);
+        } else {
+          newSet.add(index);
+        }
+        return newSet;
+      });
+    };
+    
     return (
-      <article className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-100 p-8" aria-labelledby="hints-heading">
-        <header className="flex items-center gap-3 mb-8">
-          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center" aria-hidden="true">
-            <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" />
-            </svg>
+      <ResultWrapper>
+        <div className="space-y-4">
+          {/* Info banner */}
+          <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-2">
+            <p className="text-sm text-purple-800">
+              💡 <strong>Progressive Hints:</strong> Hints are revealed one at a time, just like in a real interview. Try to solve with fewer hints!
+            </p>
           </div>
-          <h2 id="hints-heading" className="text-3xl font-bold text-gray-900">
-            Strategic Hints
-          </h2>
-        </header>
-
-        {/* Progressive Hints Badge */}
-        {hintResult.progressive && (
-          <div className="mb-6 inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-100 to-pink-100 border border-purple-300 rounded-xl">
-            <svg className="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" clipRule="evenodd" />
-            </svg>
-            <span className="text-sm font-semibold text-purple-900">Progressive Hints - Start with the first one!</span>
-          </div>
-        )}
-
-        {/* Hints List */}
-        <div className="mb-8 space-y-4">
-          {hintResult.hints.map((hint, index) => (
-            <div 
-              key={index} 
-              className="p-6 bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 rounded-2xl transform transition-all hover:scale-[1.02] hover:shadow-lg"
-            >
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-md">
-                  <span className="text-white font-bold text-lg">{index + 1}</span>
+          
+          {hintResult.hints.map((hint, index) => {
+            const isRevealed = revealedHints.has(index);
+            const isFirst = index === 0;
+            
+            return (
+              <div 
+                key={index} 
+                className="pb-4 last:pb-0 border-b last:border-b-0 border-slate-200 relative"
+              >
+                <div className="mb-2">
+                  <span className="text-sm font-semibold text-purple-600">
+                    Hint {index + 1}
+                  </span>
                 </div>
-                <div className="flex-1">
-                  <p className="text-gray-800 leading-relaxed text-base">{hint}</p>
+                
+                <div className={`relative ${!isRevealed && !isFirst ? 'select-none' : ''}`}>
+                  <p 
+                    className={`text-slate-700 leading-relaxed whitespace-pre-wrap transition-all ${
+                      !isRevealed && !isFirst ? 'blur-md filter' : ''
+                    }`}
+                  >
+                    {hint.replace(/^[•\-]\s*/, '')}
+                  </p>
+                  
+                  {!isRevealed && !isFirst && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-transparent via-white/50 to-white/80 cursor-pointer"
+                         onClick={() => toggleHint(index)}>
+                      <button
+                        className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg shadow-lg transition-colors flex items-center gap-2"
+                      >
+                        <Eye className="w-4 h-4" />
+                        Click to Reveal Hint {index + 1}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Next Steps */}
-        {hintResult.next_steps && hintResult.next_steps.length > 0 && (
-          <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl">
-            <h3 className="text-xl font-bold text-blue-900 mb-4 flex items-center gap-2">
-              <svg className="w-6 h-6 text-blue-700" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-              Next Steps
-            </h3>
-            <ul className="space-y-3">
-              {hintResult.next_steps.map((step, index) => (
-                <li key={index} className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-6 h-6 bg-blue-500 rounded-lg flex items-center justify-center mt-0.5">
-                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
+            );
+          })}
+          
+          {hintResult.next_steps && hintResult.next_steps.length > 0 && (
+            <div className="pt-4 relative">
+              <p className="font-semibold text-slate-700 mb-2">Next Steps:</p>
+              
+              <div className={`relative ${!nextStepsRevealed ? 'select-none' : ''}`}>
+                <ul className={`list-disc list-inside space-y-1 transition-all ${
+                  !nextStepsRevealed ? 'blur-md filter' : ''
+                }`}>
+                  {hintResult.next_steps.map((step, index) => (
+                    <li key={index} className="text-slate-700">{step}</li>
+                  ))}
+                </ul>
+                
+                {!nextStepsRevealed && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-transparent via-white/50 to-white/80 cursor-pointer"
+                       onClick={() => setNextStepsRevealed(true)}>
+                    <button
+                      className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg shadow-lg transition-colors flex items-center gap-2"
+                    >
+                      <Eye className="w-4 h-4" />
+                      Click to Reveal Next Steps
+                    </button>
                   </div>
-                  <span className="text-blue-900 leading-relaxed flex-1 font-medium">{step}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </article>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </ResultWrapper>
     );
   }
 
