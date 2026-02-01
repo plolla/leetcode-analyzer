@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Commit and Push Changes",
+  "description": "Reviews staged changes, commits them with a descriptive message, and pushes to the main branch",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Look at the staged changes in git, create a descriptive commit message based on the changes, commit them, and then push to the main branch"
+  }
+}

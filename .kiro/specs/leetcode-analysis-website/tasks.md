@@ -297,10 +297,56 @@ This implementation plan converts the LeetCode Analysis Website design into disc
     - Test history functionality end-to-end
     - Test error handling across components
 
-- [ ] 19. Final checkpoint - Complete system verification
-  - Verify all features work correctly together
-  - Test with various LeetCode problems and code samples
-  - Ensure performance meets requirements
+- [ ] 19. Implement optional problem URL and problem inference
+  - [ ] 19.1 Make LeetCode URL optional in UI
+    - Update ProblemInput component to mark URL as optional
+    - Allow analysis to proceed with only code input
+    - Update validation logic to require only code
+    - _Requirements: 1.6, 1.7_
+  
+  - [ ] 19.2 Implement problem inference from code
+    - Add AI service method to infer problem from code structure
+    - Extract method names and analyze code patterns
+    - Return inferred problem with confidence level
+    - _Requirements: 1.6, 1.7_
+  
+  - [ ] 19.3 Update analysis endpoints to handle optional problem URL
+    - Modify POST /api/analyze to accept optional problemUrl
+    - Call problem inference when URL is not provided
+    - Include inferred problem in analysis results
+    - _Requirements: 1.6, 1.7_
+  
+  - [ ] 19.4 Display inferred problem information
+    - Show inferred problem in results when URL was not provided
+    - Display confidence level for inference
+    - Allow user to confirm or correct inferred problem
+    - _Requirements: 1.6, 1.7_
+  
+  - [ ]* 19.5 Write property test for problem inference
+    - **Property 18: Problem Inference from Code**
+    - **Validates: Requirements 1.6, 1.7**
+
+- [ ] 20. Implement collapsible complexity explanations
+  - [ ] 20.1 Update complexity analysis UI for progressive disclosure
+    - Display time and space complexity prominently at the top
+    - Hide detailed explanation in collapsible section
+    - Add "Show Explanation" / "Hide Explanation" button
+    - _Requirements: 3.2, 3.3, 3.5_
+  
+  - [ ] 20.2 Update ComplexityAnalysis data structure
+    - Ensure explanation is separate from Big O notation
+    - Structure data to support progressive disclosure
+    - Maintain backward compatibility with existing results
+    - _Requirements: 3.2, 3.3, 3.5_
+  
+  - [ ]* 20.3 Write property test for complexity display progressive disclosure
+    - **Property 19: Complexity Display Progressive Disclosure**
+    - **Validates: Requirements 3.2, 3.3, 3.5**
+
+- [ ] 21. Final checkpoint - User feedback features complete
+  - Verify optional URL functionality works correctly
+  - Test problem inference with various code samples
+  - Verify collapsible explanations work as expected
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

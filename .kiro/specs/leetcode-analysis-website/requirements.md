@@ -27,6 +27,8 @@ The LeetCode Analysis Website is a web-based application designed to help softwa
 3. WHEN a user pastes their solution code, THE System SHALL accept and store it for analysis
 4. WHEN a user submits both a problem link and solution code, THE System SHALL validate both inputs before proceeding
 5. THE System SHALL support multiple programming languages for solution input
+6. WHEN a user provides only solution code without a problem link, THE System SHALL use AI to infer the LeetCode problem from the code structure and method names
+7. THE System SHALL make the LeetCode problem link optional, allowing users to proceed with analysis using only their code
 
 ### Requirement 2: Analysis Option Selection
 
@@ -46,9 +48,10 @@ The LeetCode Analysis Website is a web-based application designed to help softwa
 #### Acceptance Criteria
 
 1. WHEN a user requests time complexity analysis, THE System SHALL analyze the provided solution and return Big O notation
-2. WHEN analyzing time complexity, THE System SHALL explain the reasoning behind the complexity assessment
-3. WHEN the solution has multiple complexity aspects, THE System SHALL break down time and space complexity separately
-4. THE System SHALL identify the most significant operations contributing to the overall complexity
+2. WHEN displaying time complexity results, THE System SHALL show time and space complexity prominently with the explanation initially hidden
+3. WHEN a user wants to understand the complexity reasoning, THE System SHALL provide an expandable section to view the detailed explanation
+4. WHEN the solution has multiple complexity aspects, THE System SHALL break down time and space complexity separately
+5. THE System SHALL identify the most significant operations contributing to the overall complexity in the expandable explanation section
 
 ### Requirement 4: Hint Generation
 

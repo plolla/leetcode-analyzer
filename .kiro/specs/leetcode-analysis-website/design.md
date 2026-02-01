@@ -92,9 +92,11 @@ graph TB
 - Coordinates between input, analysis, and history components
 
 **ProblemInput Component**
-- Manages LeetCode URL input and validation
-- Displays extracted problem information
+- Manages optional LeetCode URL input and validation
+- Displays extracted problem information when URL is provided
 - Handles problem link parsing and error states
+- Clearly indicates that problem URL is optional
+- Shows inferred problem information when analysis proceeds without URL
 
 **CodeEditor Component**
 - Monaco-based code editor with syntax highlighting
@@ -109,7 +111,9 @@ graph TB
 **ResultsDisplay Component**
 - Formats and displays AI analysis results
 - Handles different result types (complexity, hints, optimization, debugging)
+- For complexity analysis, shows Big O notation prominently with collapsible explanation section
 - Provides copy-to-clipboard functionality
+- Displays inferred problem information when no URL was provided
 
 **HistoryPanel Component**
 - Displays previously analyzed solutions organized by problem and date
@@ -143,16 +147,24 @@ interface ProblemDetails {
 **AIService**
 ```typescript
 interface AIService {
-  analyzeTimeComplexity(problem: ProblemDetails, code: string): Promise<ComplexityAnalysis>;
-  generateHints(problem: ProblemDetails, code: string): Promise<HintResponse>;
-  optimizeSolution(problem: ProblemDetails, code: string): Promise<OptimizationResponse>;
-  debugSolution(problem: ProblemDetails, code: string): Promise<DebugResponse>;
+  analyzeTimeComplexity(problem: ProblemDetails | null, code: string): Promise<ComplexityAnalysis>;
+  generateHints(problem: ProblemDetails | null, code: string): Promise<HintResponse>;
+  optimizeSolution(problem: ProblemDetails | null, code: string): Promise<OptimizationResponse>;
+  debugSolution(problem: ProblemDetails | null, code: string): Promise<DebugResponse>;
   checkSolutionCompleteness(code: string): Promise<CompletenessCheck>;
+  inferProblemFromCode(code: string): Promise<ProblemInference>;
 }
 
 // Implementations available:
 // - ClaudeService (uses Claude Sonnet 4.5 - primary service)
 // - OpenAIService (uses GPT-5-mini - fallback service)
+
+interface ProblemInference {
+  inferredProblem: string;
+  confidence: number;
+  suggestedTitle?: string;
+  reasoning: string;
+}
 ```
 
 **HistoryService**
@@ -213,7 +225,7 @@ interface ValidationService {
 
 ```typescript
 interface AnalysisRequest {
-  problemUrl: string;
+  problemUrl?: string; // Optional - can be inferred from code
   code: string;
   language: string;
   analysisType: 'complexity' | 'hints' | 'optimization' | 'debugging';
@@ -235,6 +247,7 @@ interface ComplexityAnalysis {
   explanation: string;
   keyOperations: string[];
   improvements?: string[];
+  inferredProblem?: string; // Present when no problem URL was provided
 }
 
 interface HintResponse {
@@ -305,16 +318,16 @@ interface ValidationResult {
 Based on the prework analysis, here are the key correctness properties for the LeetCode Analysis Website:
 
 **Property 1: URL Validation and Parsing**
-*For any* string input, the system should correctly identify valid LeetCode URLs and extract problem details, while rejecting invalid URLs with descriptive error messages
-**Validates: Requirements 1.1, 1.2**
+*For any* string input, the system should correctly identify valid LeetCode URLs and extract problem details, while rejecting invalid URLs with descriptive error messages. When no URL is provided, the system should proceed with code-only analysis.
+**Validates: Requirements 1.1, 1.2, 1.7**
 
 **Property 2: Code Input Handling**
 *For any* code input in supported programming languages, the system should accept, store, and validate the code before processing
 **Validates: Requirements 1.3, 1.5, 9.3**
 
 **Property 3: Input Validation Workflow**
-*For any* combination of problem URL and solution code inputs, the system should validate both inputs together before allowing analysis to proceed
-**Validates: Requirements 1.4, 9.1**
+*For any* combination of problem URL (optional) and solution code inputs, the system should validate inputs appropriately before allowing analysis to proceed. Code is required, but URL is optional.
+**Validates: Requirements 1.4, 1.6, 1.7, 9.1**
 
 **Property 4: Analysis Option Availability**
 *For any* input state, analysis options should be enabled only when required inputs are provided, with appropriate guidance shown otherwise
@@ -325,8 +338,8 @@ Based on the prework analysis, here are the key correctness properties for the L
 **Validates: Requirements 2.4, 8.3**
 
 **Property 6: Analysis Result Structure**
-*For any* analysis request, the system should return results in the expected format with all required components (complexity notation, explanations, suggestions, etc.)
-**Validates: Requirements 3.1, 3.2, 3.3, 3.4**
+*For any* analysis request, the system should return results in the expected format with all required components (complexity notation, explanations, suggestions, etc.). For complexity analysis, results should separate the Big O notation from detailed explanations to support progressive disclosure.
+**Validates: Requirements 3.1, 3.2, 3.3, 3.4, 3.5**
 
 **Property 7: Hint Generation Quality**
 *For any* hint request, the system should provide progressive hints that guide toward solutions without revealing complete implementations
@@ -371,6 +384,14 @@ Based on the prework analysis, here are the key correctness properties for the L
 **Property 17: Performance and Responsiveness**
 *For any* analysis request, the system should provide loading indicators, complete within reasonable time limits, and cache results for improved performance
 **Validates: Requirements 12.1, 12.2, 12.4**
+
+**Property 18: Problem Inference from Code**
+*For any* code input without a problem URL, the system should attempt to infer the LeetCode problem from code structure, method names, and logic patterns, providing the inferred problem information to the user
+**Validates: Requirements 1.6, 1.7**
+
+**Property 19: Complexity Display Progressive Disclosure**
+*For any* complexity analysis result, the system should display Big O notation prominently while keeping detailed explanations in a collapsible/expandable section, allowing users to access details only when needed
+**Validates: Requirements 3.2, 3.3, 3.5**
 
 <function_calls>
 <invoke name="prework">
