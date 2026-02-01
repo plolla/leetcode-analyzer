@@ -247,44 +247,92 @@ export default function ResultsDisplay({
   // Render complexity analysis results
   if (analysisType === 'complexity') {
     const complexityResult = result as ComplexityAnalysisResult;
+    const [showExplanation, setShowExplanation] = useState(false);
+    
     return (
       <ResultWrapper>
         <div className="space-y-4">
-          <div>
-            <p className="text-sm font-semibold text-slate-600 mb-1">Time Complexity</p>
-            <p className="text-3xl font-bold text-blue-600">{complexityResult.time_complexity}</p>
-          </div>
-          
-          <div>
-            <p className="text-sm font-semibold text-slate-600 mb-1">Space Complexity</p>
-            <p className="text-3xl font-bold text-emerald-600">{complexityResult.space_complexity}</p>
-          </div>
-          
-          <div className="pt-4 border-t border-slate-200">
-            <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">{complexityResult.explanation}</p>
-          </div>
-          
-          {complexityResult.key_operations && complexityResult.key_operations.length > 0 && (
-            <div className="pt-4">
-              <p className="font-semibold text-slate-700 mb-2">Key Operations:</p>
-              <ul className="list-disc list-inside space-y-1">
-                {complexityResult.key_operations.map((operation, index) => (
-                  <li key={index} className="text-slate-700">{operation}</li>
-                ))}
-              </ul>
+          {/* Inferred Problem Info (if present) */}
+          {complexityResult.inferred_problem && (
+            <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-start gap-2">
+                <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-blue-800 mb-1">
+                    {complexityResult.inferred_problem_title ? `Inferred Problem: ${complexityResult.inferred_problem_title}` : 'Inferred Problem'}
+                  </p>
+                  <p className="text-sm text-blue-700">{complexityResult.inferred_problem}</p>
+                </div>
+              </div>
             </div>
           )}
           
-          {complexityResult.improvements && complexityResult.improvements.length > 0 && (
-            <div className="pt-4">
-              <p className="font-semibold text-slate-700 mb-2">Potential Improvements:</p>
-              <ul className="list-disc list-inside space-y-1">
-                {complexityResult.improvements.map((improvement, index) => (
-                  <li key={index} className="text-slate-700">{improvement}</li>
-                ))}
-              </ul>
+          {/* Complexity Results - Prominently Displayed */}
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="p-5 bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-300 rounded-xl">
+              <p className="text-sm font-semibold text-blue-700 mb-2">Time Complexity</p>
+              <p className="text-4xl font-bold text-blue-600">{complexityResult.time_complexity}</p>
             </div>
-          )}
+            
+            <div className="p-5 bg-gradient-to-br from-emerald-50 to-emerald-100 border-2 border-emerald-300 rounded-xl">
+              <p className="text-sm font-semibold text-emerald-700 mb-2">Space Complexity</p>
+              <p className="text-4xl font-bold text-emerald-600">{complexityResult.space_complexity}</p>
+            </div>
+          </div>
+          
+          {/* Collapsible Explanation Section */}
+          <div className="border-t border-slate-200 pt-4">
+            <button
+              onClick={() => setShowExplanation(!showExplanation)}
+              className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors group"
+            >
+              <span className="font-semibold text-slate-700 flex items-center gap-2">
+                <svg className="w-5 h-5 text-slate-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+                {showExplanation ? 'Hide' : 'Show'} Detailed Explanation
+              </span>
+              <svg 
+                className={`w-5 h-5 text-slate-600 transition-transform ${showExplanation ? 'rotate-180' : ''}`} 
+                fill="currentColor" 
+                viewBox="0 0 20 20"
+              >
+                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+            
+            {showExplanation && (
+              <div className="mt-4 space-y-4 animate-fadeIn">
+                <div className="p-4 bg-white border border-slate-200 rounded-lg">
+                  <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">{complexityResult.explanation}</p>
+                </div>
+                
+                {complexityResult.key_operations && complexityResult.key_operations.length > 0 && (
+                  <div className="p-4 bg-white border border-slate-200 rounded-lg">
+                    <p className="font-semibold text-slate-700 mb-2">Key Operations:</p>
+                    <ul className="list-disc list-inside space-y-1">
+                      {complexityResult.key_operations.map((operation, index) => (
+                        <li key={index} className="text-slate-700">{operation}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                
+                {complexityResult.improvements && complexityResult.improvements.length > 0 && (
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p className="font-semibold text-amber-900 mb-2">Potential Improvements:</p>
+                    <ul className="list-disc list-inside space-y-1">
+                      {complexityResult.improvements.map((improvement, index) => (
+                        <li key={index} className="text-amber-800">{improvement}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </ResultWrapper>
     );

@@ -8,6 +8,8 @@ export interface ComplexityAnalysisResult {
   explanation: string;
   key_operations: string[];
   improvements?: string[];
+  inferred_problem?: string;  // Present when no problem URL was provided
+  inferred_problem_title?: string;  // Suggested problem title if identified
 }
 
 export interface HintResult {

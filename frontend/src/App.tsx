@@ -44,8 +44,8 @@ function App() {
   const codeEditorRef = useRef<HTMLDivElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
 
-  // Validate LeetCode URL
-  const isUrlValid = /leetcode\.com\/problems\/[\w-]+/.test(problemUrl);
+  // Validate LeetCode URL - now optional, so only check if provided
+  const isUrlValid = !problemUrl || /leetcode\.com\/problems\/[\w-]+/.test(problemUrl);
 
   const handleAnalysisSelect = (type: AnalysisType) => {
     setSelectedAnalysis(type);
@@ -131,7 +131,7 @@ function App() {
     while (retryCount <= maxRetries) {
       try {
         console.log(`Sending analysis request (attempt ${retryCount + 1}/${maxRetries + 1}):`, {
-          problem_url: problemUrl,
+          problem_url: problemUrl || null,
           code: code.substring(0, 50) + '...',
           language: language,
           analysis_type: selectedAnalysis,
@@ -143,7 +143,7 @@ function App() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            problem_url: problemUrl,
+            problem_url: problemUrl || null, // Send null if empty
             code: code,
             language: language,
             analysis_type: selectedAnalysis,
@@ -286,8 +286,8 @@ function App() {
     }, 100);
   };
 
-  // Determine if analysis options should be enabled
-  const canAnalyze = isUrlValid && code.trim().length > 0;
+  // Determine if analysis options should be enabled - only code is required now
+  const canAnalyze = code.trim().length > 0 && isUrlValid;
 
   // Keyboard shortcuts configuration
   const shortcuts: KeyboardShortcut[] = [
@@ -501,17 +501,19 @@ function App() {
               <div className="mb-4">
                 <label className="block text-sm font-medium text-slate-700 mb-2">
                   <Link className="inline w-4 h-4 mr-1" />
-                  LeetCode Problem Link <span className="text-red-500">*</span>
+                  LeetCode Problem Link <span className="text-sm text-slate-500">(Optional)</span>
                 </label>
                 <input
                   ref={problemInputRef}
                   type="text"
                   value={problemUrl}
                   onChange={(e) => setProblemUrl(e.target.value)}
-                  placeholder="https://leetcode.com/problems/..."
-                  required
+                  placeholder="https://leetcode.com/problems/... (or leave empty)"
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition"
                 />
+                <p className="mt-1 text-xs text-slate-500">
+                  Leave empty to let AI infer the problem from your code
+                </p>
               </div>
 
               {/* Language Selector */}

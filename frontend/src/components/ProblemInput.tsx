@@ -15,7 +15,7 @@ interface ValidationState {
 export default function ProblemInput({ onUrlChange }: ProblemInputProps) {
   const [url, setUrl] = useState('');
   const [validation, setValidation] = useState<ValidationState>({
-    isValid: false,
+    isValid: true, // Start as valid since URL is optional
     error: '',
     success: ''
   });
@@ -29,8 +29,9 @@ export default function ProblemInput({ onUrlChange }: ProblemInputProps) {
 
   const validateUrl = (inputUrl: string): ValidationState => {
     if (!inputUrl.trim()) {
+      // Empty URL is valid since it's optional
       return {
-        isValid: false,
+        isValid: true,
         error: '',
         success: ''
       };
@@ -89,7 +90,7 @@ export default function ProblemInput({ onUrlChange }: ProblemInputProps) {
   return (
     <div className="w-full">
       <label htmlFor="leetcode-url" className="block text-base font-semibold text-gray-800 mb-3">
-        LeetCode Problem URL
+        LeetCode Problem URL <span className="text-sm font-normal text-gray-500">(Optional)</span>
       </label>
       <div className="relative">
         <input
@@ -144,7 +145,7 @@ export default function ProblemInput({ onUrlChange }: ProblemInputProps) {
       {/* Help text */}
       {!url && (
         <p id="url-help" className="mt-3 text-sm text-gray-500">
-          Enter a LeetCode problem URL (e.g., https://leetcode.com/problems/two-sum/)
+          Enter a LeetCode problem URL (e.g., https://leetcode.com/problems/two-sum/) or leave empty to let AI infer the problem from your code
         </p>
       )}
     </div>
