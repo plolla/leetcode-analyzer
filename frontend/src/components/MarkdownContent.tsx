@@ -70,16 +70,17 @@ export default function MarkdownContent({ content }: MarkdownContentProps) {
         ),
         
         // Code
-        code: ({ inline, children }) => {
-          if (inline) {
+        code: ({ node, className, children, ...props }) => {
+          const isInline = !className?.includes('language-');
+          if (isInline) {
             return (
-              <code className="px-1.5 py-0.5 bg-slate-100 text-slate-800 rounded text-sm font-mono border border-slate-200">
+              <code className="px-1.5 py-0.5 bg-slate-100 text-slate-800 rounded text-sm font-mono border border-slate-200" {...props}>
                 {children}
               </code>
             );
           }
           return (
-            <code className="block p-4 bg-slate-800 text-slate-100 rounded-lg overflow-x-auto text-sm font-mono leading-relaxed my-4">
+            <code className="block p-4 bg-slate-800 text-slate-100 rounded-lg overflow-x-auto text-sm font-mono leading-relaxed my-4" {...props}>
               {children}
             </code>
           );
