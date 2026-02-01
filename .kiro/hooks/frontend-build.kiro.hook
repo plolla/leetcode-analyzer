@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Build Frontend",
+  "description": "Runs npm run build in the frontend directory to create a production build",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Run `cd frontend && npm run build` to build the frontend for production"
+  }
+}
