@@ -22,6 +22,21 @@ class ComplexityAnalysis(BaseModel):
     inferred_problem_title: Optional[str] = None  # Suggested problem title if identified
 
 
+class QuickComplexityAnalysis(BaseModel):
+    """Quick complexity analysis with just Big O notation."""
+    time_complexity: str
+    space_complexity: str
+    inferred_problem: Optional[str] = None  # Present when no problem URL was provided
+    inferred_problem_title: Optional[str] = None  # Suggested problem title if identified
+
+
+class ComplexityExplanation(BaseModel):
+    """Detailed explanation for complexity analysis."""
+    explanation: str
+    key_operations: List[str]
+    improvements: Optional[List[str]] = None
+
+
 class HintResponse(BaseModel):
     hints: List[str]
     progressive: bool
@@ -94,6 +109,52 @@ class AIService(ABC):
             
         Returns:
             ComplexityAnalysis with time/space complexity and explanations
+        """
+        pass
+    
+    @abstractmethod
+    async def analyze_complexity_quick(
+        self, 
+        problem_description: Optional[str], 
+        code: str, 
+        language: str
+    ) -> QuickComplexityAnalysis:
+        """
+        Quick complexity analysis - returns only Big O notation.
+        Optimized for speed with minimal prompt and response.
+        
+        Args:
+            problem_description: The LeetCode problem description (optional - will infer if None)
+            code: The solution code to analyze
+            language: Programming language of the code
+            
+        Returns:
+            QuickComplexityAnalysis with just time/space complexity
+        """
+        pass
+    
+    @abstractmethod
+    async def explain_complexity(
+        self, 
+        problem_description: Optional[str], 
+        code: str, 
+        language: str,
+        time_complexity: str,
+        space_complexity: str
+    ) -> ComplexityExplanation:
+        """
+        Generate detailed explanation for complexity analysis.
+        Uses the already-computed Big O notation to provide context.
+        
+        Args:
+            problem_description: The LeetCode problem description (optional)
+            code: The solution code
+            language: Programming language of the code
+            time_complexity: Already computed time complexity (e.g., "O(n)")
+            space_complexity: Already computed space complexity (e.g., "O(1)")
+            
+        Returns:
+            ComplexityExplanation with detailed explanation and suggestions
         """
         pass
     

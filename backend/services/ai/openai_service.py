@@ -5,6 +5,8 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 from .ai_service import (
     AIService,
     ComplexityAnalysis,
+    QuickComplexityAnalysis,
+    ComplexityExplanation,
     HintResponse,
     OptimizationResponse,
     OptimizationSuggestion,
@@ -121,6 +123,112 @@ class OpenAIService(AIService):
                 improvements=None,
                 inferred_problem="Unable to parse analysis" if not problem_description else None
             )
+    
+    def analyze_complexity_quick(
+        self, 
+        problem_description: Optional[str], 
+        code: str, 
+        language: str
+    ) -> QuickComplexityAnalysis:
+        """Quick complexity analysis - returns only Big O notation."""
+        
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        system, prompt = AIPrompts.complexity_analysis_quick(
+            code=code,
+            language=language,
+            problem_description=problem_description
+        )
+
+        messages = [
+            {"role": "system", "content": system},
+            {"role": "user", "content": prompt}
+        ]
+        
+        # Use lower temperature and smaller max_tokens for faster response
+        client = self._get_client()
+        if "gpt-5" in self.model:
+            temperature = 1.0
+        else:
+            temperature = 0.1
+        
+        token_param = "max_completion_tokens" if "gpt-5" in self.model or "gpt-4" in self.model else "max_tokens"
+        
+        logger.info(f"Quick complexity analysis with model={self.model}, {token_param}=200")
+        
+        response = client.chat.completions.create(
+            model=self.model,
+            messages=messages,
+            temperature=temperature,
+            **{token_param: 200}  # Much smaller for quick response
+        )
+        
+        response_text = response.choices[0].message.content
+        logger.info(f"Quick analysis response: {response_text}")
+        
+        # Parse JSON response
+        try:
+            if not response_text or response_text.strip() == '':
+                logger.error("Empty response from OpenAI")
+                raise Exception("AI returned an empty response. Please try again.")
+            
+            if "```json" in response_text:
+                response_text = response_text.split("```json")[1].split("```")[0].strip()
+            elif "```" in response_text:
+                response_text = response_text.split("```")[1].split("```")[0].strip()
+            
+            data = json.loads(response_text)
+            return QuickComplexityAnalysis(**data)
+        except (json.JSONDecodeError, KeyError) as e:
+            logger.error(f"Failed to parse quick analysis response: {e}")
+            logger.error(f"Response was: {response_text}")
+            # Don't return fallback - raise error instead
+            raise Exception(f"Failed to parse AI response for complexity analysis: {str(e)}")
+    
+    def explain_complexity(
+        self, 
+        problem_description: Optional[str], 
+        code: str, 
+        language: str,
+        time_complexity: str,
+        space_complexity: str
+    ) -> ComplexityExplanation:
+        """Generate detailed explanation for complexity analysis."""
+        
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        system, prompt = AIPrompts.complexity_explanation(
+            code=code,
+            language=language,
+            time_complexity=time_complexity,
+            space_complexity=space_complexity,
+            problem_description=problem_description
+        )
+
+        messages = [
+            {"role": "system", "content": system},
+            {"role": "user", "content": prompt}
+        ]
+        
+        response = self._call_openai(messages, temperature=0.3)
+        
+        logger.info(f"Complexity explanation response: {response[:500]}")
+        
+        # Parse JSON response
+        try:
+            if "```json" in response:
+                response = response.split("```json")[1].split("```")[0].strip()
+            elif "```" in response:
+                response = response.split("```")[1].split("```")[0].strip()
+            
+            data = json.loads(response)
+            return ComplexityExplanation(**data)
+        except (json.JSONDecodeError, KeyError) as e:
+            logger.error(f"Failed to parse explanation response: {e}")
+            # Don't return fallback - raise error instead
+            raise Exception(f"Failed to parse AI response for complexity explanation: {str(e)}")
     
     def generate_hints(
         self, 

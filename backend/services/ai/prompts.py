@@ -72,6 +72,107 @@ Be specific about the complexity and explain your reasoning."""
         return system, user
     
     @staticmethod
+    def complexity_analysis_quick(
+        code: str,
+        language: str,
+        problem_description: Optional[str] = None
+    ) -> Tuple[str, str]:
+        """
+        Generate prompts for QUICK time/space complexity analysis (Big O only).
+        Optimized for speed with minimal prompt and response.
+        
+        Args:
+            code: The solution code to analyze
+            language: Programming language of the code
+            problem_description: Optional problem description
+            
+        Returns:
+            Tuple of (system_prompt, user_prompt)
+        """
+        system = "You are an expert algorithm analyst. Provide ONLY the Big O complexity notation."
+        
+        if problem_description:
+            user = f"""Analyze ONLY the time and space complexity (Big O notation) of this {language} code:
+
+Problem: {problem_description[:300]}
+
+Code:
+```{language}
+{code}
+```
+
+Return ONLY JSON with Big O notation:
+{{
+    "time_complexity": "O(...)",
+    "space_complexity": "O(...)"
+}}
+
+NO explanations, NO key operations, ONLY the Big O notation."""
+        else:
+            user = f"""Analyze ONLY the time and space complexity (Big O notation) of this {language} code:
+
+Code:
+```{language}
+{code}
+```
+
+Return ONLY JSON:
+{{
+    "time_complexity": "O(...)",
+    "space_complexity": "O(...)",
+    "inferred_problem": "Brief 1-sentence description of the problem",
+    "inferred_problem_title": "Problem Name" (if identifiable)
+}}
+
+NO detailed explanations, ONLY the Big O notation and brief problem inference."""
+        
+        return system, user
+    
+    @staticmethod
+    def complexity_explanation(
+        code: str,
+        language: str,
+        time_complexity: str,
+        space_complexity: str,
+        problem_description: Optional[str] = None
+    ) -> Tuple[str, str]:
+        """
+        Generate prompts for detailed complexity explanation.
+        Uses already-computed Big O to provide focused explanation.
+        
+        Args:
+            code: The solution code
+            language: Programming language
+            time_complexity: Already computed time complexity
+            space_complexity: Already computed space complexity
+            problem_description: Optional problem description
+            
+        Returns:
+            Tuple of (system_prompt, user_prompt)
+        """
+        system = "You are an expert algorithm analyst. Explain complexity analysis in detail."
+        
+        problem_context = f"\n\nProblem: {problem_description[:300]}" if problem_description else ""
+        
+        user = f"""The time complexity is {time_complexity} and space complexity is {space_complexity} for this {language} code:{problem_context}
+
+Code:
+```{language}
+{code}
+```
+
+Provide a detailed explanation in JSON format:
+{{
+    "explanation": "Detailed explanation of WHY the complexity is {time_complexity} time and {space_complexity} space",
+    "key_operations": ["operation1 that contributes to complexity", "operation2", ...],
+    "improvements": ["suggestion1", "suggestion2"] (optional - only if optimizations exist)
+}}
+
+Focus on explaining the reasoning behind the complexity, identifying key operations, and suggesting improvements if applicable."""
+        
+        return system, user
+    
+    @staticmethod
     def hints_generation(
         code: str,
         language: str,

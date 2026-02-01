@@ -83,6 +83,22 @@ class AsyncOpenAIWrapper:
             lambda: self.sync_service.analyze_time_complexity(problem_description, code, language)
         )
     
+    async def analyze_complexity_quick(self, problem_description: str, code: str, language: str):
+        """Async wrapper for analyze_complexity_quick."""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            self._get_executor(),
+            lambda: self.sync_service.analyze_complexity_quick(problem_description, code, language)
+        )
+    
+    async def explain_complexity(self, problem_description: str, code: str, language: str, time_complexity: str, space_complexity: str):
+        """Async wrapper for explain_complexity."""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            self._get_executor(),
+            lambda: self.sync_service.explain_complexity(problem_description, code, language, time_complexity, space_complexity)
+        )
+    
     async def generate_hints(self, problem_description: str, code: str, language: str):
         """Async wrapper for generate_hints."""
         loop = asyncio.get_event_loop()
@@ -257,6 +273,20 @@ class AIServiceWithFallback:
         return await self._execute_with_fallback(
             "analyze_time_complexity",
             problem_description, code, language
+        )
+    
+    async def analyze_complexity_quick(self, problem_description: str, code: str, language: str):
+        """Quick complexity analysis with fallback support."""
+        return await self._execute_with_fallback(
+            "analyze_complexity_quick",
+            problem_description, code, language
+        )
+    
+    async def explain_complexity(self, problem_description: str, code: str, language: str, time_complexity: str, space_complexity: str):
+        """Explain complexity with fallback support."""
+        return await self._execute_with_fallback(
+            "explain_complexity",
+            problem_description, code, language, time_complexity, space_complexity
         )
     
     async def generate_hints(self, problem_description: str, code: str, language: str):

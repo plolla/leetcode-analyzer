@@ -5,6 +5,8 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 from .ai_service import (
     AIService,
     ComplexityAnalysis,
+    QuickComplexityAnalysis,
+    ComplexityExplanation,
     HintResponse,
     OptimizationResponse,
     OptimizationSuggestion,
@@ -94,6 +96,79 @@ class ClaudeService(AIService):
                 improvements=None,
                 inferred_problem="Unable to parse analysis" if not problem_description else None
             )
+    
+    async def analyze_complexity_quick(
+        self, 
+        problem_description: Optional[str], 
+        code: str, 
+        language: str
+    ) -> QuickComplexityAnalysis:
+        """Quick complexity analysis - returns only Big O notation."""
+        
+        system, user_message = AIPrompts.complexity_analysis_quick(
+            code=code,
+            language=language,
+            problem_description=problem_description
+        )
+        
+        # Use lower temperature and max_tokens for faster response
+        client = self._get_client()
+        response = client.messages.create(
+            model=self.model,
+            max_tokens=200,  # Much smaller for quick response
+            temperature=0.1,  # Lower temperature for consistency
+            system=system,
+            messages=[
+                {"role": "user", "content": user_message}
+            ]
+        )
+        response_text = response.content[0].text
+        
+        # Parse JSON response
+        try:
+            if "```json" in response_text:
+                response_text = response_text.split("```json")[1].split("```")[0].strip()
+            elif "```" in response_text:
+                response_text = response_text.split("```")[1].split("```")[0].strip()
+            
+            data = json.loads(response_text)
+            return QuickComplexityAnalysis(**data)
+        except (json.JSONDecodeError, KeyError) as e:
+            # Don't return fallback - raise error instead
+            raise Exception(f"Failed to parse AI response for complexity analysis: {str(e)}")
+    
+    async def explain_complexity(
+        self, 
+        problem_description: Optional[str], 
+        code: str, 
+        language: str,
+        time_complexity: str,
+        space_complexity: str
+    ) -> ComplexityExplanation:
+        """Generate detailed explanation for complexity analysis."""
+        
+        system, user_message = AIPrompts.complexity_explanation(
+            code=code,
+            language=language,
+            time_complexity=time_complexity,
+            space_complexity=space_complexity,
+            problem_description=problem_description
+        )
+        
+        response = self._call_claude(system, user_message, temperature=0.3)
+        
+        # Parse JSON response
+        try:
+            if "```json" in response:
+                response = response.split("```json")[1].split("```")[0].strip()
+            elif "```" in response:
+                response = response.split("```")[1].split("```")[0].strip()
+            
+            data = json.loads(response)
+            return ComplexityExplanation(**data)
+        except (json.JSONDecodeError, KeyError) as e:
+            # Don't return fallback - raise error instead
+            raise Exception(f"Failed to parse AI response for complexity explanation: {str(e)}")
     
     async def generate_hints(
         self, 

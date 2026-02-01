@@ -7,7 +7,7 @@ import re
 import logging
 from services.leetcode_parser import leetcode_parser, ProblemDetails
 from services.ai.ai_service_factory import ai_service
-from services.ai.ai_service import ComplexityAnalysis, HintResponse, OptimizationResponse, DebugResponse, AnalysisType
+from services.ai.ai_service import ComplexityAnalysis, HintResponse, OptimizationResponse, DebugResponse, AnalysisType, QuickComplexityAnalysis, ComplexityExplanation
 from services.history_service import history_service, HistoryCreateRequest, HistoryResponse, HistoryEntry
 from services.validation_service import validation_service, ValidationResult
 from services.cache_service import cache_service
@@ -48,6 +48,20 @@ app.add_middleware(
 # In production, use Redis or similar
 problem_cache: Dict[str, Tuple[ProblemDetails, datetime]] = {}
 CACHE_DURATION = timedelta(hours=24)
+
+
+class QuickComplexityRequest(BaseModel):
+    problem_url: Optional[str] = None
+    code: str
+    language: str
+
+
+class ExplainComplexityRequest(BaseModel):
+    code: str
+    language: str
+    time_complexity: str
+    space_complexity: str
+    problem_url: Optional[str] = None
 
 
 # Request Models
@@ -217,6 +231,210 @@ async def validate_url(url: str):
             "suggestion": error.suggestion if error else None,
             "examples": error.examples if error else None
         }
+
+
+@app.options("/api/analyze")
+async def analyze_options():
+    """Handle CORS preflight for analyze endpoint."""
+    return {"message": "OK"}
+
+
+@app.post("/api/analyze-complexity-quick")
+async def analyze_complexity_quick(request: QuickComplexityRequest):
+    """
+    Quick complexity analysis - returns only Big O notation for fast response.
+    Optimized for speed with minimal AI prompt and response.
+    
+    Args:
+        request: Quick analysis request with optional problem URL, code, and language
+        
+    Returns:
+        QuickComplexityAnalysis with just time/space complexity
+        
+    Raises:
+        HTTPException: If analysis fails or invalid request
+    """
+    # Validate API key is configured
+    if not config.validate_config():
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "error": "AI service not configured",
+                "message": "The AI service is not properly configured",
+                "suggestion": "Please contact the administrator to configure API keys"
+            }
+        )
+    
+    # Validate inputs
+    code_validation = validation_service.validate_code(request.code, request.language)
+    language_validation = validation_service.validate_language(request.language)
+    
+    if not code_validation.is_valid or not language_validation.is_valid:
+        errors = code_validation.errors + language_validation.errors
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "Input validation failed",
+                "message": "Code or language validation failed",
+                "validation_errors": [
+                    {
+                        "field": error.field,
+                        "message": error.message,
+                        "suggestion": error.suggestion
+                    }
+                    for error in errors
+                ]
+            }
+        )
+    
+    # Handle problem details
+    problem_description = None
+    slug = None
+    
+    if request.problem_url:
+        slug = leetcode_parser.extract_problem_slug(request.problem_url)
+        if slug:
+            try:
+                problem = await get_problem_details(slug)
+                problem_description = f"{problem.title}: {problem.description}"
+            except Exception as e:
+                logger.warning(f"Failed to fetch problem details: {e}")
+                slug = "unknown-problem"
+        else:
+            slug = "unknown-problem"
+    else:
+        slug = "inferred-problem"
+    
+    # Check cache for quick analysis
+    cache_key_params = {
+        "problem_slug": slug,
+        "code": request.code,
+        "language": request.language,
+        "analysis_type": "complexity-quick"
+    }
+    cached_result = cache_service.get_analysis(**cache_key_params)
+    
+    if cached_result is not None:
+        logger.info(f"Returning cached quick complexity analysis for {slug}")
+        return cached_result
+    
+    # Perform quick analysis
+    try:
+        result = await ai_service.analyze_complexity_quick(
+            problem_description=problem_description,
+            code=request.code,
+            language=request.language
+        )
+        
+        # Cache the result (1 hour TTL)
+        cache_service.set_analysis(
+            **cache_key_params,
+            result=result.dict() if hasattr(result, 'dict') else result,
+            ttl=3600  # 1 hour
+        )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Quick complexity analysis failed: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "Analysis failed",
+                "message": "Failed to analyze complexity",
+                "suggestion": "Please try again. If the problem persists, contact support.",
+                "technical_details": str(e)
+            }
+        )
+
+
+@app.post("/api/explain-complexity")
+async def explain_complexity(request: ExplainComplexityRequest):
+    """
+    Generate detailed explanation for complexity analysis.
+    Uses already-computed Big O notation to provide focused explanation.
+    
+    Args:
+        request: Request with code, language, complexities, and optional problem URL
+        
+    Returns:
+        ComplexityExplanation with detailed explanation and suggestions
+        
+    Raises:
+        HTTPException: If explanation generation fails
+    """
+    # Validate API key is configured
+    if not config.validate_config():
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "error": "AI service not configured",
+                "message": "The AI service is not properly configured",
+                "suggestion": "Please contact the administrator to configure API keys"
+            }
+        )
+    
+    # Handle problem details
+    problem_description = None
+    slug = None
+    
+    if request.problem_url:
+        slug = leetcode_parser.extract_problem_slug(request.problem_url)
+        if slug:
+            try:
+                problem = await get_problem_details(slug)
+                problem_description = f"{problem.title}: {problem.description}"
+            except Exception as e:
+                logger.warning(f"Failed to fetch problem details: {e}")
+                slug = "unknown-problem"
+        else:
+            slug = "unknown-problem"
+    else:
+        slug = "inferred-problem"
+    
+    # Check cache for explanation (24 hour TTL for explanations)
+    cache_key_params = {
+        "problem_slug": slug,
+        "code": request.code,
+        "language": request.language,
+        "analysis_type": f"complexity-explanation-{request.time_complexity}-{request.space_complexity}"
+    }
+    cached_result = cache_service.get_analysis(**cache_key_params)
+    
+    if cached_result is not None:
+        logger.info(f"Returning cached complexity explanation for {slug}")
+        return cached_result
+    
+    # Generate explanation
+    try:
+        result = await ai_service.explain_complexity(
+            problem_description=problem_description,
+            code=request.code,
+            language=request.language,
+            time_complexity=request.time_complexity,
+            space_complexity=request.space_complexity
+        )
+        
+        # Cache the explanation (24 hours TTL - longer since explanations are more stable)
+        cache_service.set_analysis(
+            **cache_key_params,
+            result=result.dict() if hasattr(result, 'dict') else result,
+            ttl=86400  # 24 hours
+        )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Complexity explanation failed: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "Explanation generation failed",
+                "message": "Failed to generate detailed explanation",
+                "suggestion": "Please try again. If the problem persists, contact support.",
+                "technical_details": str(e)
+            }
+        )
 
 
 @app.options("/api/analyze")
