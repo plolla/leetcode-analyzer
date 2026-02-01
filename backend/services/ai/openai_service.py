@@ -45,11 +45,16 @@ class OpenAIService(AIService):
             Response content as string
         """
         client = self._get_client()
+        # GPT-5 models only support temperature=1
+        if "gpt-5" in self.model:
+            temperature = 1.0
+        # Use max_completion_tokens for newer models (GPT-5+), max_tokens for older models
+        token_param = "max_completion_tokens" if "gpt-5" in self.model or "gpt-4" in self.model else "max_tokens"
         response = client.chat.completions.create(
             model=self.model,
             messages=messages,
             temperature=temperature,
-            max_tokens=1500
+            **{token_param: 1000}
         )
         return response.choices[0].message.content
     
