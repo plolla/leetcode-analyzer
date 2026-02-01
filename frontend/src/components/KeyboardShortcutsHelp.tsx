@@ -1,4 +1,5 @@
-import { KeyboardShortcut, formatShortcut } from '../hooks/useKeyboardShortcuts';
+import type { KeyboardShortcut } from '../hooks/useKeyboardShortcuts';
+import { formatShortcut } from '../hooks/useKeyboardShortcuts';
 
 interface KeyboardShortcutsHelpProps {
   shortcuts: KeyboardShortcut[];
