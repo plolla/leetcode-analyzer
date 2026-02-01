@@ -10,6 +10,7 @@ import type { AnalysisType } from './components/AnalysisSelector'
 import type { HistoryEntryData } from './types/history'
 import type { AnalysisResult } from './types/analysis'
 import { frontendCache } from './utils/cache'
+import { API_ENDPOINTS } from './config/api'
 import './App.css'
 
 const LANGUAGES = [
@@ -136,7 +137,7 @@ function App() {
           analysis_type: selectedAnalysis,
         });
 
-        const response = await fetch('https://leetcode-analyzer-xto0.onrender.com/api/analyze', {
+        const response = await fetch(API_ENDPOINTS.analyze, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

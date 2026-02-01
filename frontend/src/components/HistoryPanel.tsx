@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import HistoryEntry from './HistoryEntry';
 import type { HistoryEntryData } from '../types/history';
+import { API_ENDPOINTS } from '../config/api';
 
 interface HistoryPanelProps {
   onEntrySelect: (entry: HistoryEntryData) => void;
@@ -24,7 +25,7 @@ export default function HistoryPanel({ onEntrySelect, onRerunAnalysis }: History
     setError(null);
     
     try {
-      const response = await fetch('http://localhost:8000/api/history?limit=100');
+      const response = await fetch(`${API_ENDPOINTS.history}?limit=100`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch history');
@@ -41,7 +42,7 @@ export default function HistoryPanel({ onEntrySelect, onRerunAnalysis }: History
 
   const handleDelete = async (entryId: string) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/history/${entryId}`, {
+      const response = await fetch(API_ENDPOINTS.historyById(entryId), {
         method: 'DELETE',
       });
       
