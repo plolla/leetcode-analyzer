@@ -380,7 +380,7 @@ Start by mentioning what problem you think this solves, then be specific about l
         Returns:
             Tuple of (system_prompt, user_prompt)
         """
-        system = "You are a code reviewer. Determine if code is complete."
+        system = "You are a code reviewer. Determine if code is complete based on implementation logic, NOT imports."
         
         user = f"""Analyze if this {language} code is a complete solution:
 
@@ -396,7 +396,12 @@ Return JSON format:
     "confidence": 0.95
 }}
 
-A complete solution should have proper function definition, logic implementation, and return statement."""
+IMPORTANT: Focus ONLY on the implementation and logic completeness. IGNORE missing import statements (like collections, itertools, etc.). A complete solution should have:
+- Proper function definition
+- Complete logic implementation
+- Return statement
+
+Do NOT flag missing imports as incomplete. Users may add imports separately."""
         
         return system, user
     
