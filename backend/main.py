@@ -8,7 +8,6 @@ import logging
 from services.leetcode_parser import leetcode_parser, ProblemDetails
 from services.ai.ai_service_factory import ai_service
 from services.ai.ai_service import ComplexityAnalysis, HintResponse, OptimizationResponse, DebugResponse, AnalysisType, QuickComplexityAnalysis, ComplexityExplanation
-from services.history_service import history_service, HistoryCreateRequest, HistoryResponse, HistoryEntry
 from services.validation_service import validation_service, ValidationResult
 from services.cache_service import cache_service
 from config import config
@@ -595,100 +594,6 @@ async def validate_inputs(
 
 
 
-@app.get("/api/history", response_model=HistoryResponse)
-async def get_history(
-    user_id: Optional[str] = Query(None, description="Optional user ID to filter by"),
-    limit: int = Query(100, ge=1, le=500, description="Maximum number of entries to return"),
-    offset: int = Query(0, ge=0, description="Number of entries to skip")
-):
-    """
-    Get analysis history entries.
-    
-    Args:
-        user_id: Optional user ID to filter by
-        limit: Maximum number of entries to return (1-500)
-        offset: Number of entries to skip for pagination
-        
-    Returns:
-        HistoryResponse with entries and metadata
-        
-    Raises:
-        HTTPException: If retrieval fails
-    """
-    try:
-        return history_service.get_history(user_id=user_id, limit=limit, offset=offset)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to retrieve history: {str(e)}"
-        )
-
-
-@app.get("/api/history/{problem_slug}", response_model=List[HistoryEntry])
-async def get_history_by_problem(
-    problem_slug: str,
-    user_id: Optional[str] = Query(None, description="Optional user ID to filter by")
-):
-    """
-    Get history entries for a specific problem.
-    
-    Args:
-        problem_slug: Problem slug to filter by (e.g., 'two-sum')
-        user_id: Optional user ID to filter by
-        
-    Returns:
-        List of HistoryEntry objects for the problem
-        
-    Raises:
-        HTTPException: If retrieval fails
-    """
-    try:
-        entries = history_service.get_history_by_problem(problem_slug=problem_slug, user_id=user_id)
-        return entries
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to retrieve problem history: {str(e)}"
-        )
-
-
-@app.delete("/api/history/{entry_id}")
-async def delete_history_entry(
-    entry_id: str,
-    user_id: Optional[str] = Query(None, description="Optional user ID for ownership validation")
-):
-    """
-    Delete a specific history entry.
-    
-    Args:
-        entry_id: ID of the entry to delete
-        user_id: Optional user ID for ownership validation
-        
-    Returns:
-        Success message
-        
-    Raises:
-        HTTPException: If entry not found or deletion fails
-    """
-    try:
-        deleted = history_service.delete_entry(entry_id=entry_id, user_id=user_id)
-        
-        if not deleted:
-            raise HTTPException(
-                status_code=404,
-                detail=f"History entry '{entry_id}' not found or access denied"
-            )
-        
-        return {"message": "History entry deleted successfully", "entry_id": entry_id}
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to delete history entry: {str(e)}"
-        )
-
-
 @app.post("/api/analyze")
 async def analyze_code(request: AnalysisRequest):
     """
@@ -871,21 +776,6 @@ async def analyze_code(request: AnalysisRequest):
                     "examples": ["complexity", "hints", "optimization", "debugging"]
                 }
             )
-        
-        # Save to history after successful analysis
-        try:
-            history_entry = HistoryCreateRequest(
-                problem_slug=slug,
-                problem_title=problem.title,
-                code=request.code,
-                language=request.language,
-                analysis_type=request.analysis_type,
-                result=result.dict() if hasattr(result, 'dict') else result
-            )
-            history_service.save_analysis(history_entry)
-        except Exception as e:
-            # Log error but don't fail the request if history save fails
-            logger.error(f"Failed to save history: {str(e)}")
         
         # Cache the result for future requests
         try:

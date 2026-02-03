@@ -26,12 +26,6 @@ class Config:
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
     OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-5-mini-2025-08-07")
     
-    # Database Configuration
-    DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./leetcode_analysis.db")
-    
-    # History Configuration
-    HISTORY_RETENTION_DAYS = int(os.getenv("HISTORY_RETENTION_DAYS", "7"))
-    
     # Rate Limiting
     RATE_LIMIT_PER_MINUTE = int(os.getenv("RATE_LIMIT_PER_MINUTE", "10"))
     

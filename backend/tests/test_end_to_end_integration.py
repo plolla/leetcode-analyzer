@@ -1,10 +1,9 @@
 """
 End-to-end integration tests for the LeetCode Analysis Website.
-Tests complete user journeys from input to results, history integration, and error scenarios.
+Tests complete user journeys from input to results and error scenarios.
 
 Task 18.1: Integrate all components and test end-to-end workflows
 - Test complete user journeys from input to results
-- Verify history integration works correctly
 - Test error scenarios and recovery
 """
 import asyncio
@@ -16,7 +15,6 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from main import app
-from services.history_service import history_service
 from services.cache_service import cache_service
 
 
@@ -27,13 +25,12 @@ class TestEndToEndWorkflows:
     """Test complete user workflows from start to finish."""
     
     def setup_method(self):
-        """Clear caches and history before each test."""
+        """Clear caches before each test."""
         cache_service.clear_all()
-        # Note: History cleanup would require database access
     
     def test_complete_complexity_analysis_workflow(self):
         """
-        Test complete workflow: URL validation -> Problem fetch -> Code input -> Complexity analysis -> History save
+        Test complete workflow: URL validation -> Problem fetch -> Code input -> Complexity analysis
         """
         print("\n" + "=" * 70)
         print("TEST: Complete Complexity Analysis Workflow")
@@ -106,26 +103,6 @@ def twoSum(nums, target):
         assert "space_complexity" in result
         assert "explanation" in result
         print(f"   ✓ Analysis complete: {result['time_complexity']} time, {result['space_complexity']} space")
-        
-        # Step 5: Verify history was saved
-        print("\n📚 Step 5: Verify history was saved")
-        response = client.get("/api/history")
-        assert response.status_code == 200
-        history = response.json()
-        assert history["total_count"] > 0
-        assert len(history["entries"]) > 0
-        
-        # Find our entry
-        our_entry = None
-        for entry in history["entries"]:
-            if entry["problem_slug"] == "two-sum" and entry["analysis_type"] == "complexity":
-                our_entry = entry
-                break
-        
-        assert our_entry is not None
-        assert our_entry["code"] == code
-        assert our_entry["language"] == language
-        print(f"   ✓ History entry saved: {our_entry['id']}")
         
         print("\n" + "=" * 70)
         print("✓ COMPLETE WORKFLOW TEST PASSED")
@@ -218,73 +195,6 @@ def twoSum(nums, target):
         
         print("\n" + "=" * 70)
         print("✓ COMPLETENESS BLOCKING TEST PASSED")
-        print("=" * 70)
-    
-    def test_history_retrieval_and_filtering(self):
-        """
-        Test history retrieval, filtering by problem, and entry management.
-        """
-        print("\n" + "=" * 70)
-        print("TEST: History Retrieval and Filtering")
-        print("=" * 70)
-        
-        # Create multiple analysis entries
-        print("\n📝 Step 1: Create multiple analysis entries")
-        
-        test_cases = [
-            ("https://leetcode.com/problems/two-sum/", "def twoSum(): return []", "complexity"),
-            ("https://leetcode.com/problems/two-sum/", "def twoSum(): return []", "hints"),
-            ("https://leetcode.com/problems/add-two-numbers/", "def addTwoNumbers(): return None", "complexity"),
-        ]
-        
-        for problem_url, code, analysis_type in test_cases:
-            response = client.post(
-                "/api/analyze",
-                json={
-                    "problem_url": problem_url,
-                    "code": code,
-                    "language": "python",
-                    "analysis_type": analysis_type
-                }
-            )
-            # May succeed or fail depending on completeness, but should not error
-            assert response.status_code in [200, 400, 500]
-        
-        print("   ✓ Analysis entries created")
-        
-        # Step 2: Retrieve all history
-        print("\n📚 Step 2: Retrieve all history")
-        response = client.get("/api/history")
-        assert response.status_code == 200
-        history = response.json()
-        assert "entries" in history
-        assert "total_count" in history
-        print(f"   ✓ Retrieved {history['total_count']} total entries")
-        
-        # Step 3: Filter by specific problem
-        print("\n🔍 Step 3: Filter history by problem")
-        response = client.get("/api/history/two-sum")
-        assert response.status_code == 200
-        problem_history = response.json()
-        assert isinstance(problem_history, list)
-        
-        # All entries should be for two-sum
-        for entry in problem_history:
-            assert entry["problem_slug"] == "two-sum"
-        print(f"   ✓ Retrieved {len(problem_history)} entries for 'two-sum'")
-        
-        # Step 4: Delete a history entry
-        if len(problem_history) > 0:
-            print("\n🗑️  Step 4: Delete a history entry")
-            entry_id = problem_history[0]["id"]
-            response = client.delete(f"/api/history/{entry_id}")
-            assert response.status_code == 200
-            result = response.json()
-            assert result["entry_id"] == entry_id
-            print(f"   ✓ Deleted entry: {entry_id}")
-        
-        print("\n" + "=" * 70)
-        print("✓ HISTORY MANAGEMENT TEST PASSED")
         print("=" * 70)
     
     def test_caching_workflow(self):
@@ -538,7 +448,6 @@ def run_all_tests():
         workflow_tests.test_complete_complexity_analysis_workflow()
         workflow_tests.test_hints_workflow_with_incomplete_solution()
         workflow_tests.test_completeness_blocking_workflow()
-        workflow_tests.test_history_retrieval_and_filtering()
         workflow_tests.test_caching_workflow()
     except Exception as e:
         print(f"\n❌ Workflow test failed: {e}")

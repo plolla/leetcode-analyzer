@@ -1,15 +1,13 @@
 import { useState, useRef } from 'react'
-import { Code2, Link, Code, Activity, Sparkles, Bug, Zap, History, Keyboard } from 'lucide-react'
+import { Code2, Link, Code, Activity, Sparkles, Bug, Zap, Keyboard } from 'lucide-react'
 import { Resizable } from 're-resizable'
 import Editor from '@monaco-editor/react'
 import ResultsDisplay from './components/ResultsDisplay'
-import HistoryPanel from './components/HistoryPanel'
 import KeyboardShortcutsHelp from './components/KeyboardShortcutsHelp'
 import { ThemeToggle } from './components/ThemeToggle'
 import { useTheme } from './hooks/useTheme'
 import { useKeyboardShortcuts, type KeyboardShortcut } from './hooks/useKeyboardShortcuts'
 import type { AnalysisType } from './components/AnalysisSelector'
-import type { HistoryEntryData } from './types/history'
 import type { AnalysisResult } from './types/analysis'
 import { frontendCache } from './utils/cache'
 import { API_ENDPOINTS } from './config/api'
@@ -36,7 +34,6 @@ function App() {
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showHistory, setShowHistory] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [estimatedTime, setEstimatedTime] = useState(0);
   const [loadingMessage, setLoadingMessage] = useState('');
@@ -368,29 +365,6 @@ function App() {
     setLoading(false);
   };
 
-  const handleHistoryEntrySelect = (entry: HistoryEntryData) => {
-    setProblemUrl(`https://leetcode.com/problems/${entry.problem_slug}/`);
-    setCode(entry.code);
-    setLanguage(entry.language);
-    setSelectedAnalysis(entry.analysis_type as AnalysisType);
-    setAnalysisResult(entry.result);
-    setError(null);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleRerunAnalysis = async (entry: HistoryEntryData) => {
-    setProblemUrl(`https://leetcode.com/problems/${entry.problem_slug}/`);
-    setCode(entry.code);
-    setLanguage(entry.language);
-    setSelectedAnalysis(entry.analysis_type as AnalysisType);
-    setAnalysisResult(null);
-    setError(null);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    setTimeout(() => {
-      handleAnalyze();
-    }, 100);
-  };
-
   // Determine if analysis options should be enabled - only code is required now
   const canAnalyze = code.trim().length > 0 && isUrlValid;
 
@@ -420,17 +394,8 @@ function App() {
       action: () => {
         if (showShortcutsHelp) {
           setShowShortcutsHelp(false);
-        } else if (showHistory) {
-          setShowHistory(false);
         }
       }
-    },
-    {
-      key: 'h',
-      ctrl: true,
-      description: 'Toggle history panel',
-      category: 'Navigation',
-      action: () => setShowHistory(!showHistory)
     },
     {
       key: '1',
@@ -537,15 +502,6 @@ function App() {
           {/* Action Buttons */}
           <div className="mt-6 flex items-center justify-center gap-3">
             <button
-              onClick={() => setShowHistory(!showHistory)}
-              className="px-6 py-3 bg-purple-600 hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-800 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
-              aria-label="Toggle history panel"
-            >
-              <History className="w-5 h-5" />
-              {showHistory ? 'Hide History' : 'View History'}
-            </button>
-            
-            <button
               onClick={() => setShowShortcutsHelp(true)}
               className="px-6 py-3 bg-gray-600 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-800 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
               aria-label="Show keyboard shortcuts"
@@ -558,16 +514,6 @@ function App() {
             <ThemeToggle className="px-4 py-3 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5" />
           </div>
         </div>
-
-        {/* History Panel */}
-        {showHistory && (
-          <aside className="mb-8" aria-label="Analysis history">
-            <HistoryPanel
-              onEntrySelect={handleHistoryEntrySelect}
-              onRerunAnalysis={handleRerunAnalysis}
-            />
-          </aside>
-        )}
 
         {/* Main Content - Split Pane Layout */}
         <div className="flex gap-6 flex-col lg:flex-row">
