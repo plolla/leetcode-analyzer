@@ -414,19 +414,29 @@ export default function ResultsDisplay({
     
     // Debug logging
     console.log('Rendering hints:', {
-      hintsCount: hintResult.hints?.length,
-      hints: hintResult.hints,
-      progressive: hintResult.progressive,
-      nextSteps: hintResult.next_steps
+      hintsCount: hintResult?.hints?.length,
+      hints: hintResult?.hints,
+      progressive: hintResult?.progressive,
+      nextSteps: hintResult?.next_steps,
+      fullResult: hintResult
     });
     
     // Check if hints exist and is an array
-    if (!hintResult.hints || !Array.isArray(hintResult.hints)) {
+    if (!hintResult || !hintResult.hints || !Array.isArray(hintResult.hints) || hintResult.hints.length === 0) {
       return (
         <ResultWrapper>
           <div className="space-y-4">
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-red-700">No hints available. The response format may be incorrect.</p>
+              <p className="text-red-700 font-semibold mb-2">Unable to generate hints</p>
+              <p className="text-red-600 text-sm">The AI response was not in the expected format. Please try again.</p>
+              {hintResult && (
+                <details className="mt-3">
+                  <summary className="text-xs text-red-500 cursor-pointer hover:text-red-700">Debug Info</summary>
+                  <pre className="mt-2 text-xs bg-red-100 p-2 rounded overflow-auto">
+                    {JSON.stringify(hintResult, null, 2)}
+                  </pre>
+                </details>
+              )}
             </div>
           </div>
         </ResultWrapper>
@@ -495,7 +505,7 @@ export default function ResultsDisplay({
             );
           })}
           
-          {hintResult.next_steps && hintResult.next_steps.length > 0 && (
+          {hintResult.next_steps && Array.isArray(hintResult.next_steps) && hintResult.next_steps.length > 0 && (
             <div className="pt-4 relative">
               <p className="font-semibold text-slate-700 mb-2">Next Steps:</p>
               

@@ -193,12 +193,30 @@ class ClaudeService(AIService):
                 response = response.split("```")[1].split("```")[0].strip()
             
             data = json.loads(response)
+            
+            # Validate that required fields exist and are correct types
+            if not isinstance(data.get('hints'), list):
+                raise ValueError("hints field must be a list")
+            if not data.get('hints'):
+                raise ValueError("hints list cannot be empty")
+            if 'progressive' not in data:
+                data['progressive'] = True
+            if 'next_steps' not in data:
+                data['next_steps'] = []
+            elif not isinstance(data['next_steps'], list):
+                data['next_steps'] = []
+            
             return HintResponse(**data)
-        except (json.JSONDecodeError, KeyError):
+        except (json.JSONDecodeError, KeyError, ValueError) as e:
+            # Log the error for debugging
+            print(f"Error parsing hints response: {e}")
+            print(f"Raw response: {response[:500]}")
+            
+            # Return a fallback response with the raw text as a single hint
             return HintResponse(
-                hints=[response],
+                hints=[response if len(response) < 500 else "Unable to generate hints. Please try again with a different code sample."],
                 progressive=True,
-                next_steps=["Review the hints and try implementing them"]
+                next_steps=["Review the hint and try implementing a solution"]
             )
     
     async def optimize_solution(

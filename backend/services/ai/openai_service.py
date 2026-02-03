@@ -267,14 +267,29 @@ class OpenAIService(AIService):
             data = json.loads(response)
             logger.info(f"Parsed hints data keys: {data.keys()}")
             logger.info(f"Number of hints: {len(data.get('hints', []))}")
+            
+            # Validate that required fields exist and are correct types
+            if not isinstance(data.get('hints'), list):
+                raise ValueError("hints field must be a list")
+            if not data.get('hints'):
+                raise ValueError("hints list cannot be empty")
+            if 'progressive' not in data:
+                data['progressive'] = True
+            if 'next_steps' not in data:
+                data['next_steps'] = []
+            elif not isinstance(data['next_steps'], list):
+                data['next_steps'] = []
+            
             return HintResponse(**data)
-        except (json.JSONDecodeError, KeyError) as e:
+        except (json.JSONDecodeError, KeyError, ValueError) as e:
             logger.error(f"Failed to parse hints response: {e}")
             logger.error(f"Response was: {response}")
+            
+            # Return a fallback response with the raw text as a single hint
             return HintResponse(
-                hints=[response],
+                hints=[response if len(response) < 500 else "Unable to generate hints. Please try again with a different code sample."],
                 progressive=True,
-                next_steps=["Review the hints and try implementing them"]
+                next_steps=["Review the hint and try implementing a solution"]
             )
     
     def optimize_solution(
