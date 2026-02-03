@@ -49,11 +49,11 @@ export default function ResultsDisplay({
   // Empty state when no analysis has been run
   if (!loading && !error && !result) {
     return (
-      <div className="bg-white rounded-xl shadow-lg p-6 h-fit lg:sticky lg:top-8">
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 h-fit lg:sticky lg:top-8">
         <div className="flex flex-col items-center justify-center text-center py-12">
-          <FileText className="w-16 h-16 text-slate-300 mb-4" />
-          <h3 className="text-xl font-medium text-slate-400 mb-2">No Analysis Yet</h3>
-          <p className="text-slate-500 text-sm max-w-sm">
+          <FileText className="w-16 h-16 text-slate-300 dark:text-slate-600 mb-4" />
+          <h3 className="text-xl font-medium text-slate-400 dark:text-slate-500 mb-2">No Analysis Yet</h3>
+          <p className="text-slate-500 dark:text-slate-400 text-sm max-w-sm">
             Enter your code and select an analysis option to get started
           </p>
         </div>
@@ -95,38 +95,38 @@ export default function ResultsDisplay({
   const getBgColor = () => {
     switch (analysisType) {
       case 'complexity':
-        return 'bg-blue-50 border-blue-200';
+        return 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800';
       case 'hints':
-        return 'bg-purple-50 border-purple-200';
+        return 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800';
       case 'debugging':
-        return 'bg-red-50 border-red-200';
+        return 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800';
       case 'optimization':
-        return 'bg-green-50 border-green-200';
+        return 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800';
       default:
-        return 'bg-slate-50 border-slate-200';
+        return 'bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-slate-600';
     }
   };
   if (loading) {
     return (
-      <div className="bg-white rounded-xl shadow-lg p-6 h-fit lg:sticky lg:top-8">
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 h-fit lg:sticky lg:top-8">
         <div className="flex items-center gap-3 mb-4">
           {getIcon()}
-          <h2 className="text-2xl font-semibold text-slate-800">{getTitle()}</h2>
+          <h2 className="text-2xl font-semibold text-slate-800 dark:text-slate-100">{getTitle()}</h2>
         </div>
         
         <div className={`${getBgColor()} border rounded-lg p-6`}>
           <div className="flex flex-col items-center justify-center space-y-4">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-            <p className="text-slate-700 font-medium">{loadingMessage}</p>
+            <p className="text-slate-700 dark:text-slate-300 font-medium">{loadingMessage}</p>
             {loadingProgress > 0 && (
               <div className="w-full">
-                <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                   <div 
                     className="h-full bg-orange-500 transition-all duration-300"
                     style={{ width: `${loadingProgress}%` }}
                   ></div>
                 </div>
-                <p className="text-sm text-slate-600 mt-2 text-center">
+                <p className="text-sm text-slate-600 dark:text-slate-400 mt-2 text-center">
                   {Math.round(loadingProgress)}%
                 </p>
               </div>
@@ -143,14 +143,14 @@ export default function ResultsDisplay({
     const details = errorLines.slice(1).filter(line => line.trim());
     
     return (
-      <div className="bg-white rounded-xl shadow-lg p-6 h-fit lg:sticky lg:top-8">
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 h-fit lg:sticky lg:top-8">
         <div className="flex items-center gap-3 mb-4">
           <Bug className="w-6 h-6 text-red-500" />
-          <h2 className="text-2xl font-semibold text-slate-800">Error</h2>
+          <h2 className="text-2xl font-semibold text-slate-800 dark:text-slate-100">Error</h2>
         </div>
         
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-          <p className="text-red-700 font-semibold mb-3">{mainError}</p>
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+          <p className="text-red-700 dark:text-red-400 font-semibold mb-3">{mainError}</p>
           
           {details.length > 0 && (
             <div className="mt-4 space-y-2">
@@ -161,14 +161,14 @@ export default function ResultsDisplay({
                 if (trimmed.startsWith('•')) {
                   return (
                     <div key={idx} className="flex items-start gap-2">
-                      <span className="text-red-600">•</span>
-                      <p className="text-sm text-red-600">{trimmed.substring(1).trim()}</p>
+                      <span className="text-red-600 dark:text-red-400">•</span>
+                      <p className="text-sm text-red-600 dark:text-red-400">{trimmed.substring(1).trim()}</p>
                     </div>
                   );
                 }
                 
                 return (
-                  <p key={idx} className="text-sm text-red-600">
+                  <p key={idx} className="text-sm text-red-600 dark:text-red-400">
                     {trimmed}
                   </p>
                 );
@@ -186,10 +186,10 @@ export default function ResultsDisplay({
 
   // Wrapper for all result types with Figma-style design
   const ResultWrapper = ({ children }: { children: React.ReactNode }) => (
-    <div className="bg-white rounded-xl shadow-lg p-6 h-fit lg:sticky lg:top-8">
+    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 h-fit lg:sticky lg:top-8">
       <div className="flex items-center gap-3 mb-4">
         {getIcon()}
-        <h2 className="text-2xl font-semibold text-slate-800">{getTitle()}</h2>
+        <h2 className="text-2xl font-semibold text-slate-800 dark:text-slate-100">{getTitle()}</h2>
       </div>
 
       <div className={`${getBgColor()} border rounded-lg p-6`}>
@@ -204,24 +204,24 @@ export default function ResultsDisplay({
   if ('incomplete_solution' in result && result.incomplete_solution) {
     const incompleteResult = result as IncompleteSolutionResult;
     return (
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-amber-200 p-8">
+      <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-amber-200 dark:border-amber-800 p-8">
         <div className="flex items-start gap-4 mb-6">
-          <div className="flex-shrink-0 w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
-            <svg className="w-6 h-6 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+          <div className="flex-shrink-0 w-12 h-12 bg-amber-100 dark:bg-amber-900/50 rounded-xl flex items-center justify-center">
+            <svg className="w-6 h-6 text-amber-600 dark:text-amber-400" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
             </svg>
           </div>
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-amber-900 mb-2">Incomplete Solution Detected</h3>
-            <p className="text-amber-800 leading-relaxed mb-4">{incompleteResult.message}</p>
+            <h3 className="text-xl font-bold text-amber-900 dark:text-amber-300 mb-2">Incomplete Solution Detected</h3>
+            <p className="text-amber-800 dark:text-amber-400 leading-relaxed mb-4">{incompleteResult.message}</p>
           </div>
         </div>
 
         {/* Missing Elements */}
         {incompleteResult.missing_elements && incompleteResult.missing_elements.length > 0 && (
-          <div className="mb-6 p-5 bg-amber-50 rounded-xl border border-amber-200">
-            <h4 className="text-lg font-bold text-amber-900 mb-3 flex items-center gap-2">
-              <svg className="w-5 h-5 text-amber-700" fill="currentColor" viewBox="0 0 20 20">
+          <div className="mb-6 p-5 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800">
+            <h4 className="text-lg font-bold text-amber-900 dark:text-amber-300 mb-3 flex items-center gap-2">
+              <svg className="w-5 h-5 text-amber-700 dark:text-amber-400" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clipRule="evenodd" />
               </svg>
               Missing Elements
@@ -229,12 +229,12 @@ export default function ResultsDisplay({
             <ul className="space-y-2">
               {incompleteResult.missing_elements.map((element, index) => (
                 <li key={index} className="flex items-start gap-2">
-                  <div className="flex-shrink-0 w-5 h-5 bg-amber-500 rounded-md flex items-center justify-center mt-0.5">
+                  <div className="flex-shrink-0 w-5 h-5 bg-amber-500 dark:bg-amber-600 rounded-md flex items-center justify-center mt-0.5">
                     <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                     </svg>
                   </div>
-                  <span className="text-amber-900 leading-relaxed">{element}</span>
+                  <span className="text-amber-900 dark:text-amber-300 leading-relaxed">{element}</span>
                 </li>
               ))}
             </ul>
@@ -242,22 +242,22 @@ export default function ResultsDisplay({
         )}
 
         {/* Suggestion */}
-        <div className="p-5 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl">
+        <div className="p-5 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl">
           <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center">
+            <div className="flex-shrink-0 w-10 h-10 bg-blue-500 dark:bg-blue-600 rounded-xl flex items-center justify-center">
               <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" />
               </svg>
             </div>
             <div className="flex-1">
-              <h4 className="text-lg font-bold text-blue-900 mb-2">Suggestion</h4>
-              <p className="text-blue-800 leading-relaxed">{incompleteResult.suggestion}</p>
+              <h4 className="text-lg font-bold text-blue-900 dark:text-blue-300 mb-2">Suggestion</h4>
+              <p className="text-blue-800 dark:text-blue-400 leading-relaxed">{incompleteResult.suggestion}</p>
             </div>
           </div>
         </div>
 
         {/* Confidence indicator */}
-        <div className="mt-4 text-sm text-gray-600 text-center">
+        <div className="mt-4 text-sm text-gray-600 dark:text-gray-400 text-center">
           Confidence: {Math.round(incompleteResult.confidence * 100)}%
         </div>
       </div>
@@ -341,16 +341,16 @@ export default function ResultsDisplay({
         <div className="space-y-4">
           {/* Inferred Problem Info (if present) */}
           {complexityResult.inferred_problem && (
-            <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
               <div className="flex items-start gap-2">
-                <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                 </svg>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-blue-800 mb-1">
+                  <p className="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-1">
                     {complexityResult.inferred_problem_title ? `Inferred Problem: ${complexityResult.inferred_problem_title}` : 'Inferred Problem'}
                   </p>
-                  <p className="text-sm text-blue-700">{complexityResult.inferred_problem}</p>
+                  <p className="text-sm text-blue-700 dark:text-blue-400">{complexityResult.inferred_problem}</p>
                 </div>
               </div>
             </div>
@@ -370,23 +370,23 @@ export default function ResultsDisplay({
           </div>
           
           {/* Collapsible Explanation Section */}
-          <div className="border-t border-slate-200 pt-4">
+          <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
             <button
               onClick={loadExplanation}
               disabled={loadingExplanation}
-              className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors group disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 rounded-lg transition-colors group disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span className="font-semibold text-slate-700 flex items-center gap-2">
-                <svg className="w-5 h-5 text-slate-600" fill="currentColor" viewBox="0 0 20 20">
+              <span className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                <svg className="w-5 h-5 text-slate-600 dark:text-slate-400" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                 </svg>
                 {loadingExplanation ? 'Loading Explanation...' : showExplanation ? 'Hide' : 'Show'} Detailed Explanation
               </span>
               {loadingExplanation ? (
-                <div className="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-slate-600"></div>
+                <div className="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-slate-600 dark:border-slate-400"></div>
               ) : (
                 <svg 
-                  className={`w-5 h-5 text-slate-600 transition-transform ${showExplanation ? 'rotate-180' : ''}`} 
+                  className={`w-5 h-5 text-slate-600 dark:text-slate-400 transition-transform ${showExplanation ? 'rotate-180' : ''}`} 
                   fill="currentColor" 
                   viewBox="0 0 20 20"
                 >
@@ -397,27 +397,27 @@ export default function ResultsDisplay({
             
             {showExplanation && (hasExplanation || explanationData) && (
               <div className="mt-4 space-y-4 animate-fadeIn">
-                <div className="p-4 bg-white border border-slate-200 rounded-lg">
+                <div className="p-4 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg">
                   <MarkdownContent content={displayExplanation} />
                 </div>
                 
                 {displayKeyOperations && Array.isArray(displayKeyOperations) && displayKeyOperations.length > 0 && (
-                  <div className="p-4 bg-white border border-slate-200 rounded-lg">
-                    <p className="font-semibold text-slate-700 mb-2">Key Operations:</p>
+                  <div className="p-4 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg">
+                    <p className="font-semibold text-slate-700 dark:text-slate-300 mb-2">Key Operations:</p>
                     <ul className="list-disc list-inside space-y-1">
                       {displayKeyOperations.map((operation, index) => (
-                        <li key={index} className="text-slate-700">{operation}</li>
+                        <li key={index} className="text-slate-700 dark:text-slate-300">{operation}</li>
                       ))}
                     </ul>
                   </div>
                 )}
                 
                 {displayImprovements && Array.isArray(displayImprovements) && displayImprovements.length > 0 && (
-                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                    <p className="font-semibold text-amber-900 mb-2">Potential Improvements:</p>
+                  <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                    <p className="font-semibold text-amber-900 dark:text-amber-300 mb-2">Potential Improvements:</p>
                     <ul className="list-disc list-inside space-y-1">
                       {displayImprovements.map((improvement, index) => (
-                        <li key={index} className="text-amber-800">{improvement}</li>
+                        <li key={index} className="text-amber-800 dark:text-amber-400">{improvement}</li>
                       ))}
                     </ul>
                   </div>
@@ -481,8 +481,8 @@ export default function ResultsDisplay({
       <ResultWrapper>
         <div className="space-y-4">
           {/* Info banner */}
-          <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-2">
-            <p className="text-sm text-purple-800">
+          <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-3 mb-2">
+            <p className="text-sm text-purple-800 dark:text-purple-300">
               💡 <strong>Progressive Hints:</strong> Hints are revealed one at a time, just like in a real interview. Try to solve with fewer hints!
             </p>
           </div>
@@ -494,17 +494,17 @@ export default function ResultsDisplay({
             return (
               <div 
                 key={index} 
-                className="pb-4 last:pb-0 border-b last:border-b-0 border-slate-200 relative"
+                className="pb-4 last:pb-0 border-b last:border-b-0 border-slate-200 dark:border-slate-700 relative"
               >
                 <div className="mb-2">
-                  <span className="text-sm font-semibold text-purple-600">
+                  <span className="text-sm font-semibold text-purple-600 dark:text-purple-400">
                     Hint {index + 1}
                   </span>
                 </div>
                 
                 <div className={`relative ${!isRevealed && !isFirst ? 'select-none' : ''}`}>
                   <p 
-                    className={`text-slate-700 leading-relaxed whitespace-pre-wrap transition-all ${
+                    className={`text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap transition-all ${
                       !isRevealed && !isFirst ? 'blur-md filter' : ''
                     }`}
                   >
@@ -512,10 +512,10 @@ export default function ResultsDisplay({
                   </p>
                   
                   {!isRevealed && !isFirst && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-transparent via-white/50 to-white/80 cursor-pointer"
+                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-transparent via-white/50 to-white/80 dark:via-slate-800/50 dark:to-slate-800/80 cursor-pointer"
                          onClick={() => toggleHint(index)}>
                       <button
-                        className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg shadow-lg transition-colors flex items-center gap-2"
+                        className="px-4 py-2 bg-purple-600 hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-800 text-white font-medium rounded-lg shadow-lg transition-colors flex items-center gap-2"
                       >
                         <Eye className="w-4 h-4" />
                         Click to Reveal Hint {index + 1}
@@ -529,22 +529,22 @@ export default function ResultsDisplay({
           
           {hintResult.next_steps && Array.isArray(hintResult.next_steps) && hintResult.next_steps.length > 0 && (
             <div className="pt-4 relative">
-              <p className="font-semibold text-slate-700 mb-2">Next Steps:</p>
+              <p className="font-semibold text-slate-700 dark:text-slate-300 mb-2">Next Steps:</p>
               
               <div className={`relative ${!nextStepsRevealed ? 'select-none' : ''}`}>
                 <ul className={`list-disc list-inside space-y-1 transition-all ${
                   !nextStepsRevealed ? 'blur-md filter' : ''
                 }`}>
                   {hintResult.next_steps.map((step, index) => (
-                    <li key={index} className="text-slate-700">{step}</li>
+                    <li key={index} className="text-slate-700 dark:text-slate-300">{step}</li>
                   ))}
                 </ul>
                 
                 {!nextStepsRevealed && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-transparent via-white/50 to-white/80 cursor-pointer"
+                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-transparent via-white/50 to-white/80 dark:via-slate-800/50 dark:to-slate-800/80 cursor-pointer"
                        onClick={() => setNextStepsRevealed(true)}>
                     <button
-                      className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg shadow-lg transition-colors flex items-center gap-2"
+                      className="px-4 py-2 bg-purple-600 hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-800 text-white font-medium rounded-lg shadow-lg transition-colors flex items-center gap-2"
                     >
                       <Eye className="w-4 h-4" />
                       Click to Reveal Next Steps

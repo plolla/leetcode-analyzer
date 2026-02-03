@@ -37,20 +37,20 @@ export default function HistoryEntry({ entry, onSelect, onRerun, onDelete }: His
   const getAnalysisTypeStyle = (type: string) => {
     const styles = {
       complexity: {
-        bg: 'bg-blue-100',
-        text: 'text-blue-800',
+        bg: 'bg-blue-100 dark:bg-blue-900/50',
+        text: 'text-blue-800 dark:text-blue-300',
       },
       hints: {
-        bg: 'bg-purple-100',
-        text: 'text-purple-800',
+        bg: 'bg-purple-100 dark:bg-purple-900/50',
+        text: 'text-purple-800 dark:text-purple-300',
       },
       optimization: {
-        bg: 'bg-green-100',
-        text: 'text-green-800',
+        bg: 'bg-green-100 dark:bg-green-900/50',
+        text: 'text-green-800 dark:text-green-300',
       },
       debugging: {
-        bg: 'bg-red-100',
-        text: 'text-red-800',
+        bg: 'bg-red-100 dark:bg-red-900/50',
+        text: 'text-red-800 dark:text-red-300',
       }
     };
     return styles[type as keyof typeof styles] || styles.complexity;
@@ -86,7 +86,7 @@ export default function HistoryEntry({ entry, onSelect, onRerun, onDelete }: His
   };
 
   return (
-    <div className="bg-white border-2 border-gray-200 rounded-xl hover:border-purple-300 hover:shadow-lg transition-all">
+    <div className="bg-white dark:bg-slate-800 border-2 border-gray-200 dark:border-slate-700 rounded-xl hover:border-purple-300 dark:hover:border-purple-700 hover:shadow-lg transition-all">
       {/* Main Entry Content */}
       <div className="p-5">
         <div className="flex items-start gap-4">
@@ -101,14 +101,14 @@ export default function HistoryEntry({ entry, onSelect, onRerun, onDelete }: His
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-3 mb-2">
               <div className="flex-1 min-w-0">
-                <h4 className="text-lg font-bold text-gray-900 truncate">
+                <h4 className="text-lg font-bold text-gray-900 dark:text-slate-100 truncate">
                   {entry.problem_title}
                 </h4>
                 <div className="flex items-center gap-3 mt-1 flex-wrap">
-                  <span className="text-sm text-gray-600 font-medium">
+                  <span className="text-sm text-gray-600 dark:text-slate-400 font-medium">
                     {entry.language}
                   </span>
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm text-gray-500 dark:text-slate-500">
                     {formatTimestamp(entry.timestamp)}
                   </span>
                 </div>
@@ -116,18 +116,18 @@ export default function HistoryEntry({ entry, onSelect, onRerun, onDelete }: His
             </div>
 
             {/* Result Summary */}
-            <p className="text-sm text-gray-700 font-medium mt-3">
+            <p className="text-sm text-gray-700 dark:text-slate-300 font-medium mt-3">
               {getResultSummary()}
             </p>
 
             {/* Code Preview */}
             {showDetails && (
-              <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="mt-4 p-4 bg-gray-50 dark:bg-slate-700 rounded-lg border border-gray-200 dark:border-slate-600">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">Code</span>
-                  <span className="text-xs text-gray-500">{entry.code.length} characters</span>
+                  <span className="text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wide">Code</span>
+                  <span className="text-xs text-gray-500 dark:text-slate-400">{entry.code.length} characters</span>
                 </div>
-                <pre className="text-xs text-gray-800 font-mono overflow-x-auto whitespace-pre-wrap max-h-40 overflow-y-auto">
+                <pre className="text-xs text-gray-800 dark:text-slate-200 font-mono overflow-x-auto whitespace-pre-wrap max-h-40 overflow-y-auto">
                   {entry.code}
                 </pre>
               </div>
@@ -136,24 +136,24 @@ export default function HistoryEntry({ entry, onSelect, onRerun, onDelete }: His
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200">
+        <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200 dark:border-slate-700">
           <button
             onClick={() => setShowDetails(!showDetails)}
-            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors text-sm"
+            className="px-4 py-2 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-700 dark:text-slate-300 font-medium rounded-lg transition-colors text-sm"
           >
             {showDetails ? 'Hide Details' : 'View Details'}
           </button>
 
           <button
             onClick={onSelect}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors text-sm"
+            className="px-4 py-2 bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-800 text-white font-medium rounded-lg transition-colors text-sm"
           >
             Load
           </button>
 
           <button
             onClick={onRerun}
-            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors text-sm"
+            className="px-4 py-2 bg-purple-600 dark:bg-purple-700 hover:bg-purple-700 dark:hover:bg-purple-800 text-white font-medium rounded-lg transition-colors text-sm"
           >
             Re-run
           </button>
@@ -163,7 +163,7 @@ export default function HistoryEntry({ entry, onSelect, onRerun, onDelete }: His
             className={`ml-auto px-4 py-2 font-medium rounded-lg transition-colors text-sm ${
               showDeleteConfirm
                 ? 'bg-red-600 hover:bg-red-700 text-white'
-                : 'bg-gray-100 hover:bg-red-100 text-gray-700 hover:text-red-700'
+                : 'bg-gray-100 dark:bg-slate-700 hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-700 dark:text-slate-300 hover:text-red-700 dark:hover:text-red-400'
             }`}
           >
             {showDeleteConfirm ? 'Confirm Delete' : 'Delete'}

@@ -28,7 +28,7 @@ export default function KeyboardShortcutsHelp({ shortcuts, isOpen, onClose }: Ke
       aria-labelledby="shortcuts-title"
     >
       <div 
-        className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+        className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -58,19 +58,19 @@ export default function KeyboardShortcutsHelp({ shortcuts, isOpen, onClose }: Ke
         <div className="p-6 space-y-6">
           {Object.entries(groupedShortcuts).map(([category, categoryShortcuts]) => (
             <div key={category}>
-              <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">
+              <h3 className="text-sm font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-3">
                 {category}
               </h3>
               <div className="space-y-2">
                 {categoryShortcuts.map((shortcut, index) => (
                   <div 
                     key={index}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-700 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-600 transition-colors"
                   >
-                    <span className="text-gray-700 font-medium">
+                    <span className="text-gray-700 dark:text-slate-300 font-medium">
                       {shortcut.description}
                     </span>
-                    <kbd className="px-3 py-1.5 bg-white border-2 border-gray-300 rounded-lg text-sm font-mono font-semibold text-gray-800 shadow-sm">
+                    <kbd className="px-3 py-1.5 bg-white dark:bg-slate-800 border-2 border-gray-300 dark:border-slate-600 rounded-lg text-sm font-mono font-semibold text-gray-800 dark:text-slate-200 shadow-sm">
                       {formatShortcut(shortcut)}
                     </kbd>
                   </div>
@@ -81,9 +81,9 @@ export default function KeyboardShortcutsHelp({ shortcuts, isOpen, onClose }: Ke
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-gray-50 p-4 rounded-b-2xl border-t border-gray-200">
-          <p className="text-sm text-gray-600 text-center">
-            Press <kbd className="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-mono">?</kbd> to toggle this help
+        <div className="sticky bottom-0 bg-gray-50 dark:bg-slate-700 p-4 rounded-b-2xl border-t border-gray-200 dark:border-slate-600">
+          <p className="text-sm text-gray-600 dark:text-slate-400 text-center">
+            Press <kbd className="px-2 py-1 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded text-xs font-mono">?</kbd> to toggle this help
           </p>
         </div>
       </div>

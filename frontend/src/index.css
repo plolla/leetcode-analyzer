@@ -18,6 +18,9 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    transition-property: background-color, border-color, color, fill, stroke;
+    transition-duration: 200ms;
+    transition-timing-function: ease-in-out;
   }
   
   body {
@@ -32,3 +35,20 @@
     font-family: 'Fira Code', 'Courier New', monospace;
   }
 }
+
+@layer utilities {
+  /* Screen reader only - hides content visually but keeps it accessible to screen readers */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+}
+
+@variant dark (&:where(.dark, .dark *));

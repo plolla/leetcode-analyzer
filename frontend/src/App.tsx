@@ -5,6 +5,8 @@ import Editor from '@monaco-editor/react'
 import ResultsDisplay from './components/ResultsDisplay'
 import HistoryPanel from './components/HistoryPanel'
 import KeyboardShortcutsHelp from './components/KeyboardShortcutsHelp'
+import { ThemeToggle } from './components/ThemeToggle'
+import { useTheme } from './hooks/useTheme'
 import { useKeyboardShortcuts, type KeyboardShortcut } from './hooks/useKeyboardShortcuts'
 import type { AnalysisType } from './components/AnalysisSelector'
 import type { HistoryEntryData } from './types/history'
@@ -26,6 +28,7 @@ const LANGUAGES = [
 ];
 
 function App() {
+  const { theme } = useTheme();
   const [problemUrl, setProblemUrl] = useState('');
   const [code, setCode] = useState('');
   const [language, setLanguage] = useState('python');
@@ -512,7 +515,7 @@ function App() {
   useKeyboardShortcuts({ shortcuts, enabled: !showShortcutsHelp });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
       {/* Keyboard Shortcuts Help Overlay */}
       <KeyboardShortcutsHelp
         shortcuts={shortcuts}
@@ -525,9 +528,9 @@ function App() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-3">
             <Code2 className="w-10 h-10 text-orange-500" />
-            <h1 className="text-4xl font-bold text-slate-800">LeetCode Analyzer</h1>
+            <h1 className="text-4xl font-bold text-slate-800 dark:text-slate-100">LeetCode Analyzer</h1>
           </div>
-          <p className="text-slate-600 text-lg">
+          <p className="text-slate-600 dark:text-slate-300 text-lg">
             AI-powered insights for your coding solutions
           </p>
           
@@ -535,7 +538,7 @@ function App() {
           <div className="mt-6 flex items-center justify-center gap-3">
             <button
               onClick={() => setShowHistory(!showHistory)}
-              className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
+              className="px-6 py-3 bg-purple-600 hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-800 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
               aria-label="Toggle history panel"
             >
               <History className="w-5 h-5" />
@@ -544,13 +547,15 @@ function App() {
             
             <button
               onClick={() => setShowShortcutsHelp(true)}
-              className="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
+              className="px-6 py-3 bg-gray-600 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-800 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
               aria-label="Show keyboard shortcuts"
               title="Keyboard shortcuts (Press ?)"
             >
               <Keyboard className="w-5 h-5" />
               Shortcuts
             </button>
+            
+            <ThemeToggle className="px-4 py-3 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5" />
           </div>
         </div>
 
@@ -596,14 +601,14 @@ function App() {
             }}
             className="flex-shrink-0"
           >
-            <div className="bg-white rounded-xl shadow-lg p-6 h-fit">
-              <h2 className="text-2xl font-semibold text-slate-800 mb-4">Input</h2>
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 h-fit">
+              <h2 className="text-2xl font-semibold text-slate-800 dark:text-slate-100 mb-4">Input</h2>
 
               {/* LeetCode Link Input */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                   <Link className="inline w-4 h-4 mr-1" />
-                  LeetCode Problem Link <span className="text-sm text-slate-500">(Optional)</span>
+                  LeetCode Problem Link <span className="text-sm text-slate-500 dark:text-slate-400">(Optional)</span>
                 </label>
                 <input
                   ref={problemInputRef}
@@ -611,23 +616,23 @@ function App() {
                   value={problemUrl}
                   onChange={(e) => setProblemUrl(e.target.value)}
                   placeholder="https://leetcode.com/problems/... (or leave empty)"
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition"
+                  className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                 />
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                   Leave empty to let AI infer the problem from your code
                 </p>
               </div>
 
               {/* Language Selector */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                   <Code className="inline w-4 h-4 mr-1" />
                   Programming Language
                 </label>
                 <select
                   value={language}
                   onChange={(e) => setLanguage(e.target.value)}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition bg-white cursor-pointer"
+                  className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 cursor-pointer"
                 >
                   {LANGUAGES.map((lang) => (
                     <option key={lang.value} value={lang.value}>
@@ -639,16 +644,16 @@ function App() {
 
               {/* Code Input */}
               <div className="mb-6" ref={codeEditorRef}>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                   Your Code <span className="text-red-500">*</span>
                 </label>
-                <div className="border border-slate-300 rounded-lg overflow-hidden" style={{ height: '400px' }}>
+                <div className="border border-slate-300 dark:border-slate-600 rounded-lg overflow-hidden" style={{ height: '400px' }}>
                   <Editor
                     height="100%"
                     language={language}
                     value={code}
                     onChange={(value) => setCode(value || '')}
-                    theme="vs-light"
+                    theme={theme === 'dark' ? 'vs-dark' : 'vs-light'}
                     options={{
                       minimap: { enabled: false },
                       fontSize: 14,
@@ -664,7 +669,7 @@ function App() {
 
               {/* Analysis Options */}
               <div className="space-y-3">
-                <h3 className="text-sm font-medium text-slate-700 mb-2">Analysis Options</h3>
+                <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Analysis Options</h3>
                 
                 <button
                   onClick={() => {
@@ -675,7 +680,7 @@ function App() {
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition shadow-md ${
                     selectedAnalysis === 'complexity'
                       ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white'
-                      : 'bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700'
+                      : 'bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 dark:from-blue-600 dark:to-blue-700 dark:hover:from-blue-700 dark:hover:to-blue-800'
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   <Activity className="w-5 h-5" />
@@ -691,7 +696,7 @@ function App() {
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition shadow-md ${
                     selectedAnalysis === 'hints'
                       ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white'
-                      : 'bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700'
+                      : 'bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 dark:from-purple-600 dark:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800'
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   <Sparkles className="w-5 h-5" />
@@ -707,7 +712,7 @@ function App() {
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition shadow-md ${
                     selectedAnalysis === 'debugging'
                       ? 'bg-gradient-to-r from-red-600 to-red-700 text-white'
-                      : 'bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700'
+                      : 'bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 dark:from-red-600 dark:to-red-700 dark:hover:from-red-700 dark:hover:to-red-800'
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   <Bug className="w-5 h-5" />
@@ -723,7 +728,7 @@ function App() {
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition shadow-md ${
                     selectedAnalysis === 'optimization'
                       ? 'bg-gradient-to-r from-green-600 to-green-700 text-white'
-                      : 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700'
+                      : 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 dark:from-green-600 dark:to-green-700 dark:hover:from-green-700 dark:hover:to-green-800'
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   <Zap className="w-5 h-5" />
@@ -732,7 +737,7 @@ function App() {
               </div>
 
               {loading && (
-                <div className="mt-4 text-center text-slate-600">
+                <div className="mt-4 text-center text-slate-600 dark:text-slate-300">
                   <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500"></div>
                   <p className="mt-2 text-sm">{loadingMessage || 'Analyzing your code...'}</p>
                 </div>
