@@ -201,7 +201,7 @@ Current Code:
 {code}
 ```
 
-Provide 3-5 progressive hints that guide toward a solution WITHOUT revealing the complete implementation. Return JSON format:
+Provide ONLY 3 progressive hints that guide toward a solution WITHOUT revealing the complete implementation. Return JSON format:
 {{
     "hints": ["hint1", "hint2", "hint3"],
     "progressive": true,
