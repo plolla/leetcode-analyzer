@@ -85,13 +85,27 @@ class ClaudeService(AIService):
                 response = response.split("```")[1].split("```")[0].strip()
             
             data = json.loads(response)
+            
+            # Validate required fields
+            if 'time_complexity' not in data:
+                data['time_complexity'] = "Unknown (Try again)"
+            if 'space_complexity' not in data:
+                data['space_complexity'] = "Unknown (Try again)"
+            if 'explanation' not in data:
+                data['explanation'] = response
+            if 'key_operations' not in data or not isinstance(data['key_operations'], list):
+                data['key_operations'] = ["See explanation"]
+            
             return ComplexityAnalysis(**data)
-        except (json.JSONDecodeError, KeyError) as e:
+        except (json.JSONDecodeError, KeyError, ValueError) as e:
+            print(f"Error parsing complexity response: {e}")
+            print(f"Raw response: {response[:500]}")
+            
             # Fallback if JSON parsing fails
             return ComplexityAnalysis(
                 time_complexity="O(n)",
                 space_complexity="O(1)",
-                explanation=response,
+                explanation=response if len(response) < 1000 else "Unable to analyze complexity. Please try again.",
                 key_operations=["See explanation"],
                 improvements=None,
                 inferred_problem="Unable to parse analysis" if not problem_description else None
@@ -242,9 +256,29 @@ class ClaudeService(AIService):
                 response = response.split("```")[1].split("```")[0].strip()
             
             data = json.loads(response)
+            
+            # Validate required fields
+            if 'current_complexity' not in data:
+                data['current_complexity'] = "Unknown"
+            if 'optimized_complexity' not in data:
+                data['optimized_complexity'] = "Unknown"
+            if 'suggestions' not in data or not isinstance(data['suggestions'], list):
+                raise ValueError("suggestions field must be a list")
+            if not data['suggestions']:
+                raise ValueError("suggestions list cannot be empty")
+            
             # Convert suggestion dicts to OptimizationSuggestion objects
-            if "suggestions" in data:
-                data["suggestions"] = [OptimizationSuggestion(**s) for s in data["suggestions"]]
+            validated_suggestions = []
+            for s in data["suggestions"]:
+                if isinstance(s, dict):
+                    # Ensure all required fields exist
+                    validated_suggestions.append(OptimizationSuggestion(
+                        area=s.get('area', 'General'),
+                        current_approach=s.get('current_approach', 'Current implementation'),
+                        suggested_approach=s.get('suggested_approach', 'See details'),
+                        impact=s.get('impact', 'Unknown impact')
+                    ))
+            data["suggestions"] = validated_suggestions
             
             # Handle code_examples that might be dicts instead of strings
             if "code_examples" in data and data["code_examples"]:
@@ -264,14 +298,17 @@ class ClaudeService(AIService):
                 data["code_examples"] = examples
             
             return OptimizationResponse(**data)
-        except (json.JSONDecodeError, KeyError):
+        except (json.JSONDecodeError, KeyError, ValueError) as e:
+            print(f"Error parsing optimization response: {e}")
+            print(f"Raw response: {response[:500]}")
+            
             return OptimizationResponse(
                 current_complexity="Unknown",
                 optimized_complexity="Unknown",
                 suggestions=[OptimizationSuggestion(
                     area="General",
                     current_approach="Current implementation",
-                    suggested_approach=response,
+                    suggested_approach=response if len(response) < 500 else "Unable to generate optimization suggestions. Please try again.",
                     impact="See suggestion"
                 )],
                 code_examples=None
@@ -300,13 +337,37 @@ class ClaudeService(AIService):
                 response = response.split("```")[1].split("```")[0].strip()
             
             data = json.loads(response)
-            # Convert dicts to proper objects
-            if "issues" in data:
-                data["issues"] = [Issue(**i) for i in data["issues"]]
-            if "fixes" in data:
-                data["fixes"] = [Fix(**f) for f in data["fixes"]]
+            
+            # Validate and convert issues
+            if "issues" not in data or not isinstance(data["issues"], list):
+                data["issues"] = []
+            validated_issues = []
+            for i in data["issues"]:
+                if isinstance(i, dict):
+                    validated_issues.append(Issue(
+                        line=i.get('line'),
+                        description=i.get('description', 'Unknown issue'),
+                        severity=i.get('severity', 'unknown')
+                    ))
+            data["issues"] = validated_issues
+            
+            # Validate and convert fixes
+            if "fixes" not in data or not isinstance(data["fixes"], list):
+                data["fixes"] = []
+            validated_fixes = []
+            for f in data["fixes"]:
+                if isinstance(f, dict):
+                    validated_fixes.append(Fix(
+                        issue=f.get('issue', 'Unknown issue'),
+                        suggestion=f.get('suggestion', 'See details'),
+                        code_example=f.get('code_example')
+                    ))
+            data["fixes"] = validated_fixes
+            
             # Ensure test_cases are strings
-            if "test_cases" in data:
+            if "test_cases" not in data or not isinstance(data["test_cases"], list):
+                data["test_cases"] = ["Test with edge cases"]
+            else:
                 test_cases = []
                 for tc in data["test_cases"]:
                     if isinstance(tc, dict):
@@ -315,10 +376,14 @@ class ClaudeService(AIService):
                     else:
                         test_cases.append(str(tc))
                 data["test_cases"] = test_cases
+            
             return DebugResponse(**data)
-        except (json.JSONDecodeError, KeyError):
+        except (json.JSONDecodeError, KeyError, ValueError) as e:
+            print(f"Error parsing debug response: {e}")
+            print(f"Raw response: {response[:500]}")
+            
             return DebugResponse(
-                issues=[Issue(line=None, description=response, severity="unknown")],
+                issues=[Issue(line=None, description=response if len(response) < 500 else "Unable to analyze code. Please try again.", severity="unknown")],
                 fixes=[Fix(issue="See description", suggestion="Review the analysis", code_example=None)],
                 test_cases=["Test with provided examples"]
             )

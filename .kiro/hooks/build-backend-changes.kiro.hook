@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "name": "Build Backend Changes",
+  "description": "Automatically validates and checks backend Python files for errors when they are edited",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "backend/**/*.py"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Check the edited backend file for any syntax errors, import issues, or type problems. If there are issues, suggest fixes."
+  },
+  "workspaceFolderName": "leetcode-analyzer",
+  "shortName": "build-backend-changes"
+}

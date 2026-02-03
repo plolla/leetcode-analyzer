@@ -268,6 +268,28 @@ export default function ResultsDisplay({
   if (analysisType === 'complexity') {
     const complexityResult = result as ComplexityAnalysisResult;
     
+    // Validate the result structure
+    if (!complexityResult || !complexityResult.time_complexity || !complexityResult.space_complexity) {
+      return (
+        <ResultWrapper>
+          <div className="space-y-4">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-red-700 font-semibold mb-2">Unable to analyze complexity</p>
+              <p className="text-red-600 text-sm">The AI response was not in the expected format. Please try again.</p>
+              {complexityResult && (
+                <details className="mt-3">
+                  <summary className="text-xs text-red-500 cursor-pointer hover:text-red-700">Debug Info</summary>
+                  <pre className="mt-2 text-xs bg-red-100 p-2 rounded overflow-auto">
+                    {JSON.stringify(complexityResult, null, 2)}
+                  </pre>
+                </details>
+              )}
+            </div>
+          </div>
+        </ResultWrapper>
+      );
+    }
+    
     // Check if explanation is already loaded (from full analysis or previous load)
     const hasExplanation = complexityResult.explanation && complexityResult.explanation.length > 0;
     
@@ -379,7 +401,7 @@ export default function ResultsDisplay({
                   <MarkdownContent content={displayExplanation} />
                 </div>
                 
-                {displayKeyOperations && displayKeyOperations.length > 0 && (
+                {displayKeyOperations && Array.isArray(displayKeyOperations) && displayKeyOperations.length > 0 && (
                   <div className="p-4 bg-white border border-slate-200 rounded-lg">
                     <p className="font-semibold text-slate-700 mb-2">Key Operations:</p>
                     <ul className="list-disc list-inside space-y-1">
@@ -390,7 +412,7 @@ export default function ResultsDisplay({
                   </div>
                 )}
                 
-                {displayImprovements && displayImprovements.length > 0 && (
+                {displayImprovements && Array.isArray(displayImprovements) && displayImprovements.length > 0 && (
                   <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
                     <p className="font-semibold text-amber-900 mb-2">Potential Improvements:</p>
                     <ul className="list-disc list-inside space-y-1">
@@ -540,6 +562,29 @@ export default function ResultsDisplay({
   // Render optimization results
   if (analysisType === 'optimization') {
     const optimizationResult = result as OptimizationResult;
+    
+    // Validate the result structure
+    if (!optimizationResult || !optimizationResult.suggestions || !Array.isArray(optimizationResult.suggestions) || optimizationResult.suggestions.length === 0) {
+      return (
+        <ResultWrapper>
+          <div className="space-y-4">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-red-700 font-semibold mb-2">Unable to generate optimization suggestions</p>
+              <p className="text-red-600 text-sm">The AI response was not in the expected format. Please try again.</p>
+              {optimizationResult && (
+                <details className="mt-3">
+                  <summary className="text-xs text-red-500 cursor-pointer hover:text-red-700">Debug Info</summary>
+                  <pre className="mt-2 text-xs bg-red-100 p-2 rounded overflow-auto">
+                    {JSON.stringify(optimizationResult, null, 2)}
+                  </pre>
+                </details>
+              )}
+            </div>
+          </div>
+        </ResultWrapper>
+      );
+    }
+    
     return (
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-100 p-8">
         <div className="flex items-center gap-3 mb-8">
@@ -667,7 +712,30 @@ export default function ResultsDisplay({
   // Render debugging results
   if (analysisType === 'debugging') {
     const debugResult = result as DebugResult;
-    const hasIssues = debugResult.issues && debugResult.issues.length > 0;
+    
+    // Validate the result structure
+    if (!debugResult || (!debugResult.issues && !debugResult.fixes && !debugResult.test_cases)) {
+      return (
+        <ResultWrapper>
+          <div className="space-y-4">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-red-700 font-semibold mb-2">Unable to analyze code</p>
+              <p className="text-red-600 text-sm">The AI response was not in the expected format. Please try again.</p>
+              {debugResult && (
+                <details className="mt-3">
+                  <summary className="text-xs text-red-500 cursor-pointer hover:text-red-700">Debug Info</summary>
+                  <pre className="mt-2 text-xs bg-red-100 p-2 rounded overflow-auto">
+                    {JSON.stringify(debugResult, null, 2)}
+                  </pre>
+                </details>
+              )}
+            </div>
+          </div>
+        </ResultWrapper>
+      );
+    }
+    
+    const hasIssues = debugResult.issues && Array.isArray(debugResult.issues) && debugResult.issues.length > 0;
     
     return (
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-100 p-8">
@@ -772,7 +840,7 @@ export default function ResultsDisplay({
         )}
 
         {/* Fixes */}
-        {debugResult.fixes && debugResult.fixes.length > 0 && (
+        {debugResult.fixes && Array.isArray(debugResult.fixes) && debugResult.fixes.length > 0 && (
           <div className="mb-8">
             <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
               <svg className="w-7 h-7 text-gray-700" fill="currentColor" viewBox="0 0 20 20">
@@ -818,7 +886,7 @@ export default function ResultsDisplay({
         )}
 
         {/* Test Cases */}
-        {debugResult.test_cases && debugResult.test_cases.length > 0 && (
+        {debugResult.test_cases && Array.isArray(debugResult.test_cases) && debugResult.test_cases.length > 0 && (
           <div className="p-6 bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 rounded-2xl">
             <h3 className="text-xl font-bold text-purple-900 mb-4 flex items-center gap-2">
               <svg className="w-6 h-6 text-purple-700" fill="currentColor" viewBox="0 0 20 20">
